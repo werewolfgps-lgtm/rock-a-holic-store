@@ -34,7 +34,7 @@ export default function CheckoutPage() {
   nome: string;
   empresa: string;
   preco: number;
-  prazo: number;
+  prazo: number | null;
 } | null>(null);
 
   useEffect(() => {
