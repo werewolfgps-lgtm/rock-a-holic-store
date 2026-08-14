@@ -16,13 +16,16 @@ export async function GET() {
   const state = crypto.randomBytes(32).toString("hex");
 
   const authUrl = new URL(
-    "https://melhorenvio.com.br/oauth/authorize"
-  );
+  "https://sandbox.melhorenvio.com.br/oauth/authorize"
+);
 
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("scope", "cart-read cart-write shipments-read shipments-write");
+authUrl.searchParams.set(
+  "scope",
+  "shipping-calculate shipping-checkout shipping-generate shipping-print shipping-tracking cart-read cart-write"
+);
   authUrl.searchParams.set("state", state);
 
   const response = NextResponse.redirect(authUrl.toString());
