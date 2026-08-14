@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 export async function GET() {
   const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
@@ -6,36 +7,34 @@ export async function GET() {
 
   if (!clientId || !redirectUri) {
     return NextResponse.json(
-      {
-        erro: "Credenciais do Melhor Envio não configuradas.",
-      },
+      { erro: "Credenciais do Melhor Envio não configuradas." },
       { status: 500 }
     );
   }
 
-  const authorizationUrl = new URL(
-    "https://sandbox.melhorenvio.com.br/oauth/authorize"
+  // Gera um código aleatório para proteger o fluxo OAuth
+  const state = crypto.randomBytes(32).toString("hex");
+
+  const authUrl = new URL(
+    "https://melhorenvio.com.br/oauth/authorize"
   );
 
-  authorizationUrl.searchParams.set("client_id", clientId);
-  authorizationUrl.searchParams.set("redirect_uri", redirectUri);
-  authorizationUrl.searchParams.set("response_type", "code");
+  authUrl.searchParams.set("client_id", clientId);
+  authUrl.searchParams.set("redirect_uri", redirectUri);
+  authUrl.searchParams.set("response_type", "code");
+  authUrl.searchParams.set("scope", "cart-read cart-write shipments-read shipments-write");
+  authUrl.searchParams.set("state", state);
 
-  authorizationUrl.searchParams.set(
-    "scope",
-    [
-      "shipping-calculate",
-      "shipping-companies",
-      "cart-read",
-      "cart-write",
-      "orders-read",
-      "shipping-checkout",
-      "shipping-generate",
-      "shipping-print",
-      "shipping-tracking",
-      "users-read",
-    ].join(" ")
-  );
+  const response = NextResponse.redirect(authUrl.toString());
 
-  return NextResponse.redirect(authorizationUrl);
+  // Guarda o state temporariamente em um cookie seguro
+  response.cookies.set("melhor_envio_oauth_state", state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 600, // 10 minutos
+    path: "/",
+  });
+
+  return response;
 }

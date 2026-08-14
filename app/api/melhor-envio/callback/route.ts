@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const code = request.nextUrl.searchParams.get("code");
+  const stateRecebido = request.nextUrl.searchParams.get("state");
+  const stateSalvo = request.cookies.get("melhor_envio_oauth_state")?.value;
 
+  if (!stateRecebido || !stateSalvo || stateRecebido !== stateSalvo) {
+    return NextResponse.json(
+      { erro: "Falha na validação de segurança da autorização." },
+      { status: 400 }
+    );
+  }
+
+  const code = request.nextUrl.searchParams.get("code");
   const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
   const clientSecret = process.env.MELHOR_ENVIO_CLIENT_SECRET;
   const redirectUri = process.env.MELHOR_ENVIO_REDIRECT_URI;
@@ -46,16 +55,7 @@ export async function GET(request: NextRequest) {
 
     const dados = await resposta.json();
 
-if (!resposta.ok) {
-  console.error("Erro Melhor Envio:", dados);
 
-  return NextResponse.json(
-    {
-      erro: "Não foi possível obter o token.",
-    },
-    { status: resposta.status }
-  );
-}
 
     return NextResponse.json({
       sucesso: true,
