@@ -6,12 +6,14 @@ type ProductDetailsProps = {
   nome: string;
   preco: string;
   imagem: string;
+  slug: string;
 };
 
 export default function ProductDetails({
   nome,
   preco,
   imagem,
+  slug,
 }: ProductDetailsProps) {
   const [tamanho, setTamanho] = useState("");
   const [quantidade, setQuantidade] = useState(1);
@@ -63,6 +65,7 @@ export default function ProductDetails({
       tamanho,
       quantidade,
       imagem,
+      slug,
     };
 
     carrinhoAtualizado = [

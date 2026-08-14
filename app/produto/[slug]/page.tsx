@@ -105,11 +105,11 @@ export default async function ProductPage({
 
             {/* TAMANHOS */}
             <ProductDetails
-  nome={produto.nome}
-  preco={produto.preco}
-  imagem={produto.imagem}
-
-/>
+              nome={produto.nome}
+              preco={produto.preco}
+              imagem={produto.imagem}
+              slug={produto.slug}
+            />
 
             {/* DETALHES */}
             <div className="mt-10 border-t border-white/10 pt-7">
