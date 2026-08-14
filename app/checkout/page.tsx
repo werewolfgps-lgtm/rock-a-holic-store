@@ -27,15 +27,28 @@ export default function CheckoutPage() {
   });
 
   const [buscandoCep, setBuscandoCep] = useState(false);
-const [erroCep, setErroCep] = useState("");
+  const [erroCep, setErroCep] = useState("");
+  const [frete, setFrete] = useState<{
+  cep: string;
+  id: number;
+  nome: string;
+  empresa: string;
+  preco: number;
+  prazo: number;
+} | null>(null);
 
   useEffect(() => {
-    const carrinhoSalvo = localStorage.getItem("rockaholic-carrinho");
+  const carrinhoSalvo = localStorage.getItem("rockaholic-carrinho");
+  const freteSalvo = localStorage.getItem("rockaholic-frete");
 
-    if (carrinhoSalvo) {
-      setItens(JSON.parse(carrinhoSalvo));
-    }
-  }, []);
+  if (carrinhoSalvo) {
+    setItens(JSON.parse(carrinhoSalvo));
+  }
+
+  if (freteSalvo) {
+    setFrete(JSON.parse(freteSalvo));
+  }
+}, []);
 
   function converterPreco(preco: string) {
     return Number(
@@ -50,6 +63,10 @@ const [erroCep, setErroCep] = useState("");
   const subtotal = itens.reduce((soma, item) => {
     return soma + converterPreco(item.preco) * item.quantidade;
   }, 0);
+
+  const valorFrete = frete?.preco || 0;
+
+  const total = subtotal + valorFrete;
 
   function atualizarCampo(
     campo: keyof typeof dados,
@@ -359,25 +376,61 @@ const [erroCep, setErroCep] = useState("");
               ))}
             </div>
 
-            <div className="mt-6 flex justify-between">
-              <span className="font-black uppercase">
-                Total
-              </span>
+            <div className="mt-6 space-y-3 border-t border-white/10 pt-5 text-sm">
+  <div className="flex justify-between">
+    <span className="text-neutral-400">Subtotal</span>
 
-              <span className="text-2xl font-black text-[#e7cfaa]">
-                {subtotal.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
-              </span>
-            </div>
+    <span>
+      {subtotal.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      })}
+    </span>
+  </div>
 
-            <button
-              type="submit"
-              className="mt-7 w-full bg-red-700 px-6 py-5 text-xs font-black uppercase tracking-[0.15em] transition hover:bg-red-800"
-            >
-              Continuar para pagamento
-            </button>
+  <div className="flex justify-between gap-4">
+    <div>
+      <span className="text-neutral-400">Frete</span>
+
+      {frete && (
+        <p className="mt-1 text-xs text-neutral-500">
+          {frete.empresa
+            ? `${frete.empresa} - ${frete.nome}`
+            : frete.nome}
+          {" • "}
+          {frete.prazo} dia(s)
+        </p>
+      )}
+    </div>
+
+    <span>
+      {frete
+        ? valorFrete.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          })
+        : "Não selecionado"}
+    </span>
+  </div>
+
+  <div className="flex items-end justify-between border-t border-white/10 pt-4">
+    <span className="font-bold uppercase">Total</span>
+
+    <span className="text-2xl font-black text-[#e7cfaa]">
+      {total.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      })}
+    </span>
+  </div>
+</div>
+
+<button
+  type="submit"
+  className="mt-7 w-full bg-red-700 px-6 py-5 text-xs font-black uppercase tracking-[0.15em] transition hover:bg-red-800"
+>
+  Continuar para pagamento
+          </button>
           </aside>
         </form>
       </div>
