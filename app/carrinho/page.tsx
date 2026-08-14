@@ -14,7 +14,12 @@ type ItemCarrinho = {
 };
 
 export default function CarrinhoPage() {
-  const [itens, setItens] = useState<ItemCarrinho[]>([]);
+const [itens, setItens] = useState<ItemCarrinho[]>([]);
+const [cep, setCep] = useState("");
+const [calculandoFrete, setCalculandoFrete] = useState(false);
+const [erroFrete, setErroFrete] = useState("");
+const [fretes, setFretes] = useState<any[]>([]);
+const [freteSelecionado, setFreteSelecionado] = useState<any | null>(null);
 
   useEffect(() => {
     const carrinhoSalvo = localStorage.getItem("rockaholic-carrinho");
@@ -90,13 +95,83 @@ function limparCarrinho() {
   }
 
   const total = itens.reduce((soma, item) => {
-    return soma + converterPreco(item.preco) * item.quantidade;
-  }, 0);
+  return soma + converterPreco(item.preco) * item.quantidade;
+}, 0);
 
-  const totalItens = itens.reduce(
-    (soma, item) => soma + item.quantidade,
-    0
-  );
+const totalItens = itens.reduce(
+  (soma, item) => soma + item.quantidade,
+  0
+);
+
+const valorFrete = freteSelecionado
+  ? Number(
+      freteSelecionado.custom_price ||
+        freteSelecionado.price
+    )
+  : 0;
+
+const totalComFrete = total + valorFrete;
+
+
+  async function calcularFrete() {
+  const cepLimpo = cep.replace(/\D/g, "");
+
+  if (cepLimpo.length !== 8) {
+    setErroFrete("Digite um CEP válido.");
+    return;
+  }
+
+  try {
+    setCalculandoFrete(true);
+    setErroFrete("");
+    setFretes([]);
+    setFreteSelecionado(null);
+
+    const resposta = await fetch(
+      "/api/melhor-envio/calcular-frete",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cepDestino: cepLimpo,
+          quantidade: totalItens,
+        }),
+      }
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        dados.erro || "Não foi possível calcular o frete."
+      );
+    }
+
+    const opcoesValidas = dados.fretes.filter(
+      (frete: any) =>
+        frete.price &&
+        !frete.error
+    );
+
+    setFretes(opcoesValidas);
+
+    if (opcoesValidas.length === 0) {
+      setErroFrete(
+        "Nenhuma opção de entrega encontrada para este CEP."
+      );
+    }
+  } catch (error) {
+    console.error(error);
+
+    setErroFrete(
+      "Não foi possível calcular o frete. Tente novamente."
+    );
+  } finally {
+    setCalculandoFrete(false);
+  }
+}
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -245,15 +320,100 @@ function limparCarrinho() {
                   <span>{totalItens}</span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-neutral-400">
-                    Frete
-                  </span>
+                <div className="border-t border-white/10 pt-5">
+  <p className="text-xs font-bold uppercase tracking-[0.15em] text-neutral-400">
+    Calcular frete
+  </p>
 
-                  <span className="text-neutral-500">
-                    Calculado depois
-                  </span>
-                </div>
+  <div className="mt-3 flex gap-2">
+    <input
+      type="text"
+      inputMode="numeric"
+      placeholder="Digite seu CEP"
+      value={cep}
+      maxLength={9}
+      onChange={(event) => {
+        let valor = event.target.value.replace(/\D/g, "");
+
+        if (valor.length > 5) {
+          valor =
+            valor.slice(0, 5) +
+            "-" +
+            valor.slice(5, 8);
+        }
+
+        setCep(valor);
+      }}
+      className="min-w-0 flex-1 border border-white/20 bg-black px-3 py-3 text-sm text-white outline-none transition focus:border-red-600"
+    />
+
+    <button
+      type="button"
+      onClick={calcularFrete}
+      disabled={calculandoFrete}
+      className="bg-red-700 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {calculandoFrete ? "..." : "Calcular"}
+    </button>
+  </div>
+
+  {erroFrete && (
+    <p className="mt-3 text-xs text-red-500">
+      {erroFrete}
+    </p>
+  )}
+
+  {fretes.length > 0 && (
+    <div className="mt-4 space-y-2">
+      {fretes.map((frete) => (
+        <button
+          type="button"
+          key={frete.id}
+          onClick={() => setFreteSelecionado(frete)}
+          className={`w-full border p-3 text-left transition ${
+            freteSelecionado?.id === frete.id
+              ? "border-red-600 bg-red-950/20"
+              : "border-white/10 hover:border-white/30"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold">
+                {frete.company?.name
+                  ? `${frete.company.name} - ${frete.name}`
+                  : frete.name}
+              </p>
+
+              <p className="mt-1 text-xs text-neutral-500">
+                Prazo:{" "}
+                {frete.custom_delivery_time ||
+                  frete.delivery_time}{" "}
+                dia(s)
+              </p>
+            </div>
+
+            <span className="whitespace-nowrap text-sm font-bold text-[#e7cfaa]">
+              {Number(
+                frete.custom_price || frete.price
+              ).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
+            </span>
+          </div>
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+const valorFrete = freteSelecionado
+  ? Number(
+      freteSelecionado.custom_price ||
+        freteSelecionado.price
+    )
+  : 0;
+
+const totalComFrete = total + valorFrete;
               </div>
 
               <div className="mt-6 flex items-end justify-between">
@@ -262,7 +422,7 @@ function limparCarrinho() {
                 </span>
 
                 <span className="text-2xl font-black text-[#e7cfaa]">
-                  {total.toLocaleString("pt-BR", {
+                  {totalComFrete.toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
                   })}
