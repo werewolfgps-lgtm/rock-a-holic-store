@@ -437,12 +437,20 @@ const totalComFrete = total + valorFrete;
                 </span>
               </div>
 
-             <Link
-  href="/checkout"
+             <button
+  type="button"
+  onClick={() => {
+    if (!freteSelecionado) {
+      alert("Selecione uma opção de frete antes de finalizar a compra.");
+      return;
+    }
+
+    window.location.href = "/checkout";
+  }}
   className="mt-7 flex w-full items-center justify-center bg-red-700 px-6 py-4 text-xs font-black uppercase tracking-[0.15em] transition hover:bg-red-800"
 >
   Finalizar compra
-</Link>
+</button>
             </aside>
           </div>
         )}
