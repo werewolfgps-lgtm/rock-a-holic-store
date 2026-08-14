@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { neon } from "@neondatabase/serverless";
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function GET(request: NextRequest) {
   const stateRecebido = request.nextUrl.searchParams.get("state");
@@ -55,6 +57,32 @@ export async function GET(request: NextRequest) {
 
     const dados = await resposta.json();
 
+    const expiresAt = new Date(
+  Date.now() + dados.expires_in * 1000
+);
+
+await sql`
+  INSERT INTO melhor_envio_tokens (
+    id,
+    access_token,
+    refresh_token,
+    expires_at,
+    updated_at
+  )
+  VALUES (
+    1,
+    ${dados.access_token},
+    ${dados.refresh_token},
+    ${expiresAt},
+    NOW()
+  )
+  ON CONFLICT (id)
+  DO UPDATE SET
+    access_token = EXCLUDED.access_token,
+    refresh_token = EXCLUDED.refresh_token,
+    expires_at = EXCLUDED.expires_at,
+    updated_at = NOW()
+`;
 
 
     return NextResponse.json({
