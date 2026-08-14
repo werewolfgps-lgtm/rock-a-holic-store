@@ -46,15 +46,16 @@ export async function GET(request: NextRequest) {
 
     const dados = await resposta.json();
 
-    if (!resposta.ok) {
-      return NextResponse.json(
-        {
-          erro: "Não foi possível obter o token.",
-          detalhes: dados,
-        },
-        { status: resposta.status }
-      );
-    }
+if (!resposta.ok) {
+  console.error("Erro Melhor Envio:", dados);
+
+  return NextResponse.json(
+    {
+      erro: "Não foi possível obter o token.",
+    },
+    { status: resposta.status }
+  );
+}
 
     return NextResponse.json({
       sucesso: true,
