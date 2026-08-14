@@ -369,7 +369,23 @@ const totalComFrete = total + valorFrete;
         <button
           type="button"
           key={frete.id}
-          onClick={() => setFreteSelecionado(frete)}
+          onClick={() => {
+  setFreteSelecionado(frete);
+
+  localStorage.setItem(
+    "rockaholic-frete",
+    JSON.stringify({
+      cep,
+      id: frete.id,
+      nome: frete.name,
+      empresa: frete.company?.name || "",
+      preco: Number(frete.custom_price || frete.price),
+      prazo:
+        frete.custom_delivery_time ||
+        frete.delivery_time,
+    })
+  );
+}}
           className={`w-full border p-3 text-left transition ${
             freteSelecionado?.id === frete.id
               ? "border-red-600 bg-red-950/20"
