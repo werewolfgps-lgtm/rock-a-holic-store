@@ -406,14 +406,6 @@ const totalComFrete = total + valorFrete;
     </div>
   )}
 </div>
-const valorFrete = freteSelecionado
-  ? Number(
-      freteSelecionado.custom_price ||
-        freteSelecionado.price
-    )
-  : 0;
-
-const totalComFrete = total + valorFrete;
               </div>
 
               <div className="mt-6 flex items-end justify-between">
