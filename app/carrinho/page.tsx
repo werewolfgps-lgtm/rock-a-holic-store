@@ -155,7 +155,19 @@ const totalComFrete = total + valorFrete;
         !frete.error
     );
 
-    setFretes(opcoesValidas);
+    const retiradaLocal = {
+  id: "retirada-local",
+  name: "Retirada no local",
+  company: {
+    name: "Rock-a-Holic Store",
+  },
+  price: 0,
+  custom_price: 0,
+  delivery_time: 0,
+  custom_delivery_time: 0,
+};
+
+setFretes([retiradaLocal, ...opcoesValidas]);
 
     if (opcoesValidas.length === 0) {
       setErroFrete(
@@ -381,8 +393,9 @@ const totalComFrete = total + valorFrete;
       empresa: frete.company?.name || "",
       preco: Number(frete.custom_price || frete.price),
       prazo:
-        frete.custom_delivery_time ||
-        frete.delivery_time,
+        frete.id === "retirada-local"
+        ? null
+        : frete.custom_delivery_time || frete.delivery_time,
     })
   );
 }}
@@ -401,10 +414,11 @@ const totalComFrete = total + valorFrete;
               </p>
 
               <p className="mt-1 text-xs text-neutral-500">
-                Prazo:{" "}
-                {frete.custom_delivery_time ||
-                  frete.delivery_time}{" "}
-                dia(s)
+                {frete.id === "retirada-local"
+                ? "Retirada combinada após a confirmação do pedido"
+                : `Prazo: ${
+                frete.custom_delivery_time || frete.delivery_time
+                } dia(s)`}
               </p>
             </div>
 
