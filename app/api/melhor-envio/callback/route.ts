@@ -42,9 +42,10 @@ export async function GET(request: NextRequest) {
       {
         method: "POST",
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
+  Accept: "application/json",
+  "Content-Type": "application/json",
+  "User-Agent": "Rock-a-Holic Store (edsonrodrigues400@hotmail.com)",
+},
         body: JSON.stringify({
           grant_type: "authorization_code",
           client_id: clientId,
@@ -83,8 +84,6 @@ await sql`
     expires_at = EXCLUDED.expires_at,
     updated_at = NOW()
 `;
-
-
     return NextResponse.json({
       sucesso: true,
       mensagem: "Melhor Envio conectado com sucesso.",
