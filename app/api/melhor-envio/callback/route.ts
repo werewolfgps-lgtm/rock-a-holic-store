@@ -35,6 +35,12 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+console.log("OAuth callback config", {
+  clientIdFinal: clientId?.slice(-6),
+  redirectUri,
+  temClientSecret: Boolean(clientSecret),
+});
+
 
   try {
     const resposta = await fetch(
