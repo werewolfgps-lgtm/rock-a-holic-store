@@ -60,6 +60,7 @@ const [pix, setPix] = useState<{
   }
 }, []);
 
+
   function converterPreco(preco: string) {
     return Number(
       preco
@@ -69,6 +70,59 @@ const [pix, setPix] = useState<{
         .trim()
     );
   }
+  useEffect(() => {
+  if (!pix?.orderId) {
+    return;
+  }
+
+  if (pix.status === "processed") {
+    return;
+  }
+
+  const intervalo = setInterval(async () => {
+    try {
+      const resposta = await fetch(
+        `/api/mercado-pago/status/${pix.orderId}`,
+        {
+          cache: "no-store",
+        }
+      );
+
+      const resultado = await resposta.json();
+
+      if (!resposta.ok) {
+        return;
+      }
+
+      setPix((pixAtual) =>
+        pixAtual
+          ? {
+              ...pixAtual,
+              status: resultado.status,
+            }
+          : pixAtual
+      );
+
+      if (resultado.status === "processed") {
+        clearInterval(intervalo);
+
+        localStorage.removeItem("rockaholic-carrinho");
+        localStorage.removeItem("rockaholic-frete");
+
+        window.dispatchEvent(
+          new Event("rockaholic-carrinho-atualizado")
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao consultar status do pagamento:",
+        error
+      );
+    }
+  }, 5000);
+
+  return () => clearInterval(intervalo);
+}, [pix?.orderId, pix?.status]);
 
   const subtotal = itens.reduce((soma, item) => {
     return soma + converterPreco(item.preco) * item.quantidade;
@@ -521,9 +575,27 @@ const [pix, setPix] = useState<{
       Pedido Mercado Pago: {pix.orderId}
     </p>
 
-    <p className="mt-2 text-sm text-neutral-400">
-      Status: {pix.status}
+    {pix.status === "processed" ? (
+  <div className="mt-4 border border-green-700/40 bg-green-950/20 p-4">
+    <p className="font-black uppercase text-green-500">
+      Pagamento aprovado
     </p>
+
+    <p className="mt-2 text-sm text-neutral-400">
+      Seu pagamento foi confirmado com sucesso.
+    </p>
+  </div>
+) : (
+  <div className="mt-4 border border-yellow-700/30 bg-yellow-950/10 p-4">
+    <p className="font-bold text-yellow-500">
+      Aguardando pagamento
+    </p>
+
+    <p className="mt-2 text-xs text-neutral-500">
+      Esta página será atualizada automaticamente após a confirmação do Pix.
+    </p>
+  </div>
+)}
 
     {pix.qrCode && (
       <>
