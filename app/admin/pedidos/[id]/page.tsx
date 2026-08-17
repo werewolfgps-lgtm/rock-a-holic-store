@@ -84,6 +84,7 @@ export default async function PedidoDetalhesPage({
       id,
       mercado_pago_order_id,
       status_pagamento,
+      status_pedido,
       nome_cliente,
       email_cliente,
       telefone_cliente,
@@ -102,7 +103,7 @@ export default async function PedidoDetalhesPage({
       total,
       itens,
       created_at
-      status_pedido,
+      
     FROM pedidos
     WHERE id = ${pedidoId}
     LIMIT 1
