@@ -14,6 +14,13 @@ export async function GET(request: NextRequest) {
   }
 
   const code = request.nextUrl.searchParams.get("code");
+  console.log("OAuth code recebido:", {
+  existeCode: Boolean(code),
+  tamanhoCode: code?.length || 0,
+  stateRecebido: Boolean(
+    request.nextUrl.searchParams.get("state")
+  ),
+});
   const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
   const clientSecret = process.env.MELHOR_ENVIO_CLIENT_SECRET;
   const redirectUri = process.env.MELHOR_ENVIO_REDIRECT_URI;
@@ -41,6 +48,14 @@ console.log("OAuth callback config", {
   temClientSecret: Boolean(clientSecret),
 });
 
+console.log("OAuth token request:", {
+  grantType: "authorization_code",
+  clientIdFinal: clientId?.slice(-6),
+  redirectUri,
+  existeCode: Boolean(code),
+  tamanhoCode: code?.length || 0,
+  temClientSecret: Boolean(clientSecret),
+});
 
   try {
     const resposta = await fetch(
