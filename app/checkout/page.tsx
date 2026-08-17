@@ -597,9 +597,9 @@ const [pix, setPix] = useState<{
   </div>
 )}
 
-    {pix.qrCode && (
-      <>
-      {qrCodeImagem && (
+    {pix.qrCode && pix.status !== "processed" && (
+  <>
+        {qrCodeImagem && (
   <div className="mt-5 flex justify-center">
     <img
       src={qrCodeImagem}
@@ -636,7 +636,7 @@ const [pix, setPix] = useState<{
       </>
     )}
 
-    {pix.ticketUrl && (
+    {pix.ticketUrl && pix.status !== "processed" && (
       <a
         href={pix.ticketUrl}
         target="_blank"
