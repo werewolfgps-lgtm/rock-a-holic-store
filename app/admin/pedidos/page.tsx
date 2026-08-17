@@ -82,7 +82,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
         </p>
 
         <div className="mt-10 overflow-x-auto border border-white/10">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[1100px] text-left text-sm">
             <thead className="bg-neutral-950 text-xs uppercase tracking-[0.1em] text-neutral-500">
               <tr>
                 <th className="px-5 py-4">ID</th>
@@ -124,30 +124,25 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
     </p>
   </td>
 
-  <td className="px-5 py-5">
-    <span className="border border-green-700/40 bg-green-950/20 px-3 py-2 text-xs font-bold uppercase text-green-500">
-      {pedido.status_pagamento}
-      <td className="px-5 py-5">
-  <span className="border border-white/20 px-3 py-2 text-xs font-bold uppercase">
+ <td className="px-5 py-5">
+  <span className="inline-block border border-white/20 px-3 py-2 text-xs font-bold uppercase text-neutral-300">
     {pedido.status_pedido === "novo" && "Novo"}
     {pedido.status_pedido === "preparando" && "Preparando"}
     {pedido.status_pedido === "enviado" && "Enviado"}
     {pedido.status_pedido === "entregue" && "Entregue"}
   </span>
 </td>
-    </span>
-  </td>
 
-  <td className="px-5 py-5 text-neutral-400">
-    {pedido.frete_nome || "Retirada no local"}
-  </td>
+<td className="px-5 py-5 text-neutral-400">
+  {pedido.frete_nome || "Retirada no local"}
+</td>
 
-  <td className="px-5 py-5 font-black text-[#e7cfaa]">
-    {Number(pedido.total).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    })}
-  </td>
+<td className="px-5 py-5 font-black text-[#e7cfaa]">
+  {Number(pedido.total).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  })}
+</td>
 
   <td className="px-5 py-5 text-neutral-400">
     {new Date(pedido.created_at).toLocaleString("pt-BR")}
