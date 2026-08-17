@@ -15,6 +15,7 @@ type Pedido = {
   subtotal: string;
   total: string;
   created_at: string;
+  status_pedido: string;
 };
 
 export default async function AdminPedidosPage() {
@@ -52,6 +53,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
       id,
       mercado_pago_order_id,
       status_pagamento,
+      status_pedido,
       nome_cliente,
       email_cliente,
       frete_nome,
@@ -86,6 +88,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
                 <th className="px-5 py-4">ID</th>
                 <th className="px-5 py-4">Cliente</th>
                 <th className="px-5 py-4">Pagamento</th>
+                <th className="px-5 py-4">Status do pedido</th>
                 <th className="px-5 py-4">Frete</th>
                 <th className="px-5 py-4">Total</th>
                 <th className="px-5 py-4">Data</th>
@@ -124,6 +127,14 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
   <td className="px-5 py-5">
     <span className="border border-green-700/40 bg-green-950/20 px-3 py-2 text-xs font-bold uppercase text-green-500">
       {pedido.status_pagamento}
+      <td className="px-5 py-5">
+  <span className="border border-white/20 px-3 py-2 text-xs font-bold uppercase">
+    {pedido.status_pedido === "novo" && "Novo"}
+    {pedido.status_pedido === "preparando" && "Preparando"}
+    {pedido.status_pedido === "enviado" && "Enviado"}
+    {pedido.status_pedido === "entregue" && "Entregue"}
+  </span>
+</td>
     </span>
   </td>
 
