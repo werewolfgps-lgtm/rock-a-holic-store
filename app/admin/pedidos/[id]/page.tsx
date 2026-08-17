@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
+import StatusPedido from "@/app/api/admin/pedidos/[id]/StatusPedido";
 
 type ItemPedido = {
   nome: string;
@@ -11,6 +12,7 @@ type ItemPedido = {
   quantidade: number;
   imagem?: string;
   slug?: string;
+  status_pedido: string;
 };
 
 type Pedido = {
@@ -35,6 +37,7 @@ type Pedido = {
   total: string;
   itens: ItemPedido[];
   created_at: string;
+  status_pedido: string;
 };
 
 export default async function PedidoDetalhesPage({
@@ -99,6 +102,7 @@ export default async function PedidoDetalhesPage({
       total,
       itens,
       created_at
+      status_pedido,
     FROM pedidos
     WHERE id = ${pedidoId}
     LIMIT 1
@@ -136,10 +140,16 @@ export default async function PedidoDetalhesPage({
           </div>
 
           <span className="w-fit border border-green-700/40 bg-green-950/20 px-4 py-3 text-xs font-black uppercase text-green-500">
-            {pedido.status_pagamento}
-          </span>
-        </div>
+  {pedido.status_pagamento}
+</span>
+</div>
 
+<div className="mt-6 border border-white/10 bg-neutral-950 p-6">
+  <StatusPedido
+    pedidoId={pedido.id}
+    statusAtual={pedido.status_pedido}
+  />
+</div>
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <section className="border border-white/10 bg-neutral-950 p-7">
             <h2 className="text-lg font-black uppercase">
