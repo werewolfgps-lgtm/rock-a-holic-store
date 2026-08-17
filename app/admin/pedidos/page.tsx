@@ -123,7 +123,15 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
       {pedido.email_cliente}
     </p>
   </td>
-
+    {/* PAGAMENTO */}
+  <td className="px-5 py-5">
+  <span className="inline-block border border-green-700/40 bg-green-950/20 px-3 py-2 text-xs font-bold uppercase text-green-500">
+    {pedido.status_pagamento === "processed"
+      ? "Pago"
+      : pedido.status_pagamento}
+  </span>
+</td>
+    {/* STATUS DO PEDIDO */}
  <td className="px-5 py-5">
   <span className="inline-block border border-white/20 px-3 py-2 text-xs font-bold uppercase text-neutral-300">
     {pedido.status_pedido === "novo" && "Novo"}
@@ -132,7 +140,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
     {pedido.status_pedido === "entregue" && "Entregue"}
   </span>
 </td>
-
+    {/* FRETE */}
 <td className="px-5 py-5 text-neutral-400">
   {pedido.frete_nome || "Retirada no local"}
 </td>
