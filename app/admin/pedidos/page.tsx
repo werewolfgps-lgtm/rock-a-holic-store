@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import LogoutButton from "../LogoutButton";
 
 type Pedido = {
   id: number;
@@ -73,14 +74,20 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
           Rock-a-Holic Store
         </p>
 
-        <h1 className="mt-3 text-4xl font-black uppercase">
-          Pedidos
-        </h1>
+       {/* CABEÇALHO DO ADMIN */}
+        <div className="mt-3 flex items-end justify-between gap-4">
+         <div>
+         <h1 className="text-4xl font-black uppercase">
+           Pedidos
+         </h1>
 
-        <p className="mt-3 text-neutral-500">
-          {pedidos.length} pedido(s) encontrado(s)
-        </p>
+            <p className="mt-3 text-neutral-500">
+      {pedidos.length} pedido(s) encontrado(s)
+         </p>
+         </div>
 
+         <LogoutButton />
+        </div>
         <div className="mt-10 overflow-x-auto border border-white/10">
           <table className="w-full min-w-[1100px] text-left text-sm">
             <thead className="bg-neutral-950 text-xs uppercase tracking-[0.1em] text-neutral-500">
