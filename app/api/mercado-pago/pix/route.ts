@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,19 +22,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    const idempotencyKey = crypto.randomUUID();
 
     const resposta = await fetch(
       "https://api.mercadopago.com/v1/orders",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+         Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          "X-Idempotency-Key": idempotencyKey,
         },
         body: JSON.stringify({
           type: "online",
           external_reference: `rockaholic-${Date.now()}`,
           total_amount: valor.toFixed(2),
+          processing_mode: "automatic",
 
           payer: {
             email: "test_user_br@testuser.com",
@@ -58,16 +62,17 @@ export async function POST(request: NextRequest) {
     const dados = await resposta.json();
 
     if (!resposta.ok) {
-      console.error("Erro Mercado Pago:", dados);
+  console.error("Erro Mercado Pago:", dados);
 
-      return NextResponse.json(
-        {
-          erro: "Não foi possível criar o pagamento Pix.",
-        },
-        { status: resposta.status }
-      );
-    }
-
+  return NextResponse.json(
+    {
+      erro: "Não foi possível criar o pagamento Pix.",
+      statusMercadoPago: resposta.status,
+      detalhes: dados,
+    },
+    { status: resposta.status }
+  );
+}
     const pagamento = dados.transactions?.payments?.[0];
 
     return NextResponse.json({
