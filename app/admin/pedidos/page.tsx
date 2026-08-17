@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 type Pedido = {
   id: number;
@@ -98,8 +99,19 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
                   className="border-t border-white/10 bg-black"
                 >
                   <td className="px-5 py-5">
-                    <p className="font-black">#{pedido.id}</p>
+                    <Link
+                     href={`/admin/pedidos/${pedido.id}`}
+                     className="font-black transition hover:text-red-500"
+>
+                     #{pedido.id}
 
+                     <Link
+                     href={`/admin/pedidos/${pedido.id}`}
+                    className="font-black text-white transition hover:text-red-500"
+>
+                    #{pedido.id}
+                    </Link>
+                    
                     <p className="mt-1 max-w-[180px] truncate text-xs text-neutral-600">
                       {pedido.mercado_pago_order_id}
                     </p>
