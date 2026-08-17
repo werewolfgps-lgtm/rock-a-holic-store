@@ -19,7 +19,26 @@ type Pedido = {
   status_pedido: string;
 };
 
-export default async function AdminPedidosPage() {
+export default async function AdminPedidosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const params = await searchParams;
+
+const statusSelecionado = params.status || "todos";
+
+const statusValidos = [
+  "todos",
+  "novo",
+  "preparando",
+  "enviado",
+  "entregue",
+];
+
+const statusFiltro = statusValidos.includes(statusSelecionado)
+  ? statusSelecionado
+  : "todos";
     const senhaAdmin = process.env.ADMIN_PASSWORD;
 
 if (!senhaAdmin) {
@@ -49,23 +68,42 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
 
   const sql = neon(databaseUrl);
 
-  const pedidos = (await sql`
-    SELECT
-      id,
-      mercado_pago_order_id,
-      status_pagamento,
-      status_pedido,
-      nome_cliente,
-      email_cliente,
-      frete_nome,
-      frete_preco,
-      subtotal,
-      total,
-      created_at
-    FROM pedidos
-    ORDER BY id DESC
-    LIMIT 100
-  `) as Pedido[];
+  const pedidos = statusFiltro === "todos"
+  ? ((await sql`
+      SELECT
+        id,
+        mercado_pago_order_id,
+        status_pagamento,
+        status_pedido,
+        nome_cliente,
+        email_cliente,
+        frete_nome,
+        frete_preco,
+        subtotal,
+        total,
+        created_at
+      FROM pedidos
+      ORDER BY id DESC
+      LIMIT 100
+    `) as Pedido[])
+  : ((await sql`
+      SELECT
+        id,
+        mercado_pago_order_id,
+        status_pagamento,
+        status_pedido,
+        nome_cliente,
+        email_cliente,
+        frete_nome,
+        frete_preco,
+        subtotal,
+        total,
+        created_at
+      FROM pedidos
+      WHERE status_pedido = ${statusFiltro}
+      ORDER BY id DESC
+      LIMIT 100
+    `) as Pedido[]);
 
   return (
     <main className="min-h-screen bg-black px-6 py-12 text-white">
@@ -85,6 +123,63 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
       {pedidos.length} pedido(s) encontrado(s)
          </p>
          </div>
+         {/* FILTROS DOS PEDIDOS */}
+<div className="mt-8 flex flex-wrap gap-2">
+  <Link
+    href="/admin/pedidos"
+    className={`border px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition ${
+      statusFiltro === "todos"
+        ? "border-red-600 bg-red-700 text-white"
+        : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
+    }`}
+  >
+    Todos
+  </Link>
+
+  <Link
+    href="/admin/pedidos?status=novo"
+    className={`border px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition ${
+      statusFiltro === "novo"
+        ? "border-red-600 bg-red-700 text-white"
+        : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
+    }`}
+  >
+    Novos
+  </Link>
+
+  <Link
+    href="/admin/pedidos?status=preparando"
+    className={`border px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition ${
+      statusFiltro === "preparando"
+        ? "border-red-600 bg-red-700 text-white"
+        : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
+    }`}
+  >
+    Preparando
+  </Link>
+
+  <Link
+    href="/admin/pedidos?status=enviado"
+    className={`border px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition ${
+      statusFiltro === "enviado"
+        ? "border-red-600 bg-red-700 text-white"
+        : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
+    }`}
+  >
+    Enviados
+  </Link>
+
+  <Link
+    href="/admin/pedidos?status=entregue"
+    className={`border px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition ${
+      statusFiltro === "entregue"
+        ? "border-red-600 bg-red-700 text-white"
+        : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
+    }`}
+  >
+    Entregues
+  </Link>
+</div>
 
          <LogoutButton />
         </div>
