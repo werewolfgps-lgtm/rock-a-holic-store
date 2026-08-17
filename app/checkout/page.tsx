@@ -104,15 +104,35 @@ const [pix, setPix] = useState<{
       );
 
       if (resultado.status === "processed") {
-        clearInterval(intervalo);
+  clearInterval(intervalo);
 
-        localStorage.removeItem("rockaholic-carrinho");
-        localStorage.removeItem("rockaholic-frete");
+  try {
+    await fetch("/api/pedidos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mercadoPagoOrderId: pix.orderId,
+        statusPagamento: resultado.status,
+        cliente: dados,
+        frete,
+        subtotal,
+        total,
+        itens,
+      }),
+    });
+  } catch (error) {
+    console.error("Erro ao salvar pedido:", error);
+  }
 
-        window.dispatchEvent(
-          new Event("rockaholic-carrinho-atualizado")
-        );
-      }
+  localStorage.removeItem("rockaholic-carrinho");
+  localStorage.removeItem("rockaholic-frete");
+
+  window.dispatchEvent(
+    new Event("rockaholic-carrinho-atualizado")
+  );
+}
     } catch (error) {
       console.error(
         "Erro ao consultar status do pagamento:",
