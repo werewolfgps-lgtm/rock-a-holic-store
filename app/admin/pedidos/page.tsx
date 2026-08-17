@@ -94,62 +94,54 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
 
             <tbody>
               {pedidos.map((pedido) => (
-                <tr
-                  key={pedido.id}
-                  className="border-t border-white/10 bg-black"
-                >
-                  <td className="px-5 py-5">
-                    <Link
-                     href={`/admin/pedidos/${pedido.id}`}
-                     className="font-black transition hover:text-red-500"
+               <tr
+  key={pedido.id}
+  className="border-t border-white/10 bg-black"
 >
-                     #{pedido.id}
+  <td className="px-5 py-5">
+    <Link
+      href={`/admin/pedidos/${pedido.id}`}
+      className="font-black text-white transition hover:text-red-500"
+    >
+      #{pedido.id}
+    </Link>
 
-                     <Link
-                     href={`/admin/pedidos/${pedido.id}`}
-                    className="font-black text-white transition hover:text-red-500"
->
-                    #{pedido.id}
-                    </Link>
-                    
-                    <p className="mt-1 max-w-[180px] truncate text-xs text-neutral-600">
-                      {pedido.mercado_pago_order_id}
-                    </p>
-                  </td>
+    <p className="mt-1 max-w-[180px] truncate text-xs text-neutral-600">
+      {pedido.mercado_pago_order_id}
+    </p>
+  </td>
 
-                  <td className="px-5 py-5">
-                    <p className="font-bold">
-                      {pedido.nome_cliente}
-                    </p>
+  <td className="px-5 py-5">
+    <p className="font-bold">
+      {pedido.nome_cliente}
+    </p>
 
-                    <p className="mt-1 text-xs text-neutral-500">
-                      {pedido.email_cliente}
-                    </p>
-                  </td>
+    <p className="mt-1 text-xs text-neutral-500">
+      {pedido.email_cliente}
+    </p>
+  </td>
 
-                  <td className="px-5 py-5">
-                    <span className="border border-green-700/40 bg-green-950/20 px-3 py-2 text-xs font-bold uppercase text-green-500">
-                      {pedido.status_pagamento}
-                    </span>
-                  </td>
+  <td className="px-5 py-5">
+    <span className="border border-green-700/40 bg-green-950/20 px-3 py-2 text-xs font-bold uppercase text-green-500">
+      {pedido.status_pagamento}
+    </span>
+  </td>
 
-                  <td className="px-5 py-5 text-neutral-400">
-                    {pedido.frete_nome || "Retirada no local"}
-                  </td>
+  <td className="px-5 py-5 text-neutral-400">
+    {pedido.frete_nome || "Retirada no local"}
+  </td>
 
-                  <td className="px-5 py-5 font-black text-[#e7cfaa]">
-                    {Number(pedido.total).toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })}
-                  </td>
+  <td className="px-5 py-5 font-black text-[#e7cfaa]">
+    {Number(pedido.total).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    })}
+  </td>
 
-                  <td className="px-5 py-5 text-neutral-400">
-                    {new Date(pedido.created_at).toLocaleString(
-                      "pt-BR"
-                    )}
-                  </td>
-                </tr>
+  <td className="px-5 py-5 text-neutral-400">
+    {new Date(pedido.created_at).toLocaleString("pt-BR")}
+  </td>
+</tr>
               ))}
             </tbody>
           </table>
