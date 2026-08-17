@@ -14,17 +14,31 @@ export async function GET(request: NextRequest) {
   }
 
   const code = request.nextUrl.searchParams.get("code");
-  console.log("OAuth code recebido:", {
+
+const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
+const clientSecret = process.env.MELHOR_ENVIO_CLIENT_SECRET;
+const redirectUri = process.env.MELHOR_ENVIO_REDIRECT_URI;
+
+console.log("OAuth code recebido:", {
   existeCode: Boolean(code),
   tamanhoCode: code?.length || 0,
-  stateRecebido: Boolean(
-    request.nextUrl.searchParams.get("state")
-  ),
+  stateRecebido: Boolean(stateRecebido),
 });
-  const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
-  const clientSecret = process.env.MELHOR_ENVIO_CLIENT_SECRET;
-  const redirectUri = process.env.MELHOR_ENVIO_REDIRECT_URI;
 
+return NextResponse.json({
+  diagnostico: true,
+  codeRecebido: Boolean(code),
+  tamanhoCode: code?.length || 0,
+  stateRecebido: Boolean(stateRecebido),
+  stateSalvo: Boolean(stateSalvo),
+  stateValido:
+    Boolean(stateRecebido) &&
+    Boolean(stateSalvo) &&
+    stateRecebido === stateSalvo,
+  clientIdFinal: clientId?.slice(-6),
+  clientSecretConfigurado: Boolean(clientSecret),
+  redirectUri,
+});
   if (!code) {
     return NextResponse.json(
       {
