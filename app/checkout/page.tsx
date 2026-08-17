@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { useRouter } from "next/navigation";
 
 type ItemCarrinho = {
   nome: string;
@@ -12,6 +13,9 @@ type ItemCarrinho = {
 };
 
 export default function CheckoutPage() {
+
+  const router = useRouter();
+
   const [itens, setItens] = useState<ItemCarrinho[]>([]);
 
   const [dados, setDados] = useState({
@@ -107,24 +111,43 @@ const [pix, setPix] = useState<{
   clearInterval(intervalo);
 
   try {
-    await fetch("/api/pedidos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        mercadoPagoOrderId: pix.orderId,
-        statusPagamento: resultado.status,
-        cliente: dados,
-        frete,
-        subtotal,
-        total,
-        itens,
-      }),
-    });
-  } catch (error) {
-    console.error("Erro ao salvar pedido:", error);
+  const respostaPedido = await fetch("/api/pedidos", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mercadoPagoOrderId: pix.orderId,
+      statusPagamento: resultado.status,
+      cliente: dados,
+      frete,
+      subtotal,
+      total,
+      itens,
+    }),
+  });
+
+  const resultadoPedido = await respostaPedido.json();
+
+  if (!respostaPedido.ok) {
+    throw new Error(
+      resultadoPedido.erro ||
+        "Não foi possível salvar o pedido."
+    );
   }
+  
+  router.push(
+    `/pedido-confirmado?pedido=${encodeURIComponent(
+      pix.orderId
+    )}`
+  );
+} catch (error) {
+  console.error("Erro ao salvar pedido:", error);
+
+  setErroPagamento(
+    "Pagamento aprovado, mas houve um problema ao registrar o pedido. Não feche esta página."
+  );
+}
 
   localStorage.removeItem("rockaholic-carrinho");
   localStorage.removeItem("rockaholic-frete");
