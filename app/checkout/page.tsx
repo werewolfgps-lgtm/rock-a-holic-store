@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import QRCode from "qrcode";
 
 type ItemCarrinho = {
   nome: string;
@@ -27,6 +28,7 @@ export default function CheckoutPage() {
   });
 const [gerandoPix, setGerandoPix] = useState(false);
 const [erroPagamento, setErroPagamento] = useState("");
+const [qrCodeImagem, setQrCodeImagem] = useState("");
 const [pix, setPix] = useState<{
   orderId: string;
   status: string;
@@ -168,6 +170,14 @@ const [pix, setPix] = useState<{
       qrCode: resultado.qrCode,
       ticketUrl: resultado.ticketUrl,
     });
+    if (resultado.qrCode) {
+  const imagemQrCode = await QRCode.toDataURL(resultado.qrCode, {
+    width: 280,
+    margin: 2,
+  });
+
+  setQrCodeImagem(imagemQrCode);
+}
   } catch (error) {
     console.error(error);
 
@@ -203,8 +213,10 @@ const [pix, setPix] = useState<{
 
         <form
           onSubmit={finalizarCheckout}
+          noValidate
           className="mt-12 grid gap-10 lg:grid-cols-[1fr_380px]"
-        >
+>
+        
           <div className="space-y-8">
             <section className="border border-white/10 bg-neutral-950 p-7">
               <p className="text-xs font-black uppercase tracking-[0.25em] text-red-600">
@@ -488,10 +500,82 @@ const [pix, setPix] = useState<{
 
 <button
   type="submit"
-  className="mt-7 w-full bg-red-700 px-6 py-5 text-xs font-black uppercase tracking-[0.15em] transition hover:bg-red-800"
+  disabled={gerandoPix}
+  className="mt-7 w-full bg-red-700 px-6 py-5 text-xs font-black uppercase tracking-[0.15em] transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
 >
-  Continuar para pagamento
-          </button>
+  {gerandoPix ? "Gerando Pix..." : "Pagar com Pix"}
+</button>
+{erroPagamento && (
+  <p className="mt-4 text-sm text-red-500">
+    {erroPagamento}
+  </p>
+)}
+
+{pix && (
+  <div className="mt-6 border border-white/10 bg-black p-5">
+    <p className="text-xs font-black uppercase tracking-[0.2em] text-red-600">
+      Pagamento Pix
+    </p>
+
+    <p className="mt-3 text-sm text-neutral-400">
+      Pedido Mercado Pago: {pix.orderId}
+    </p>
+
+    <p className="mt-2 text-sm text-neutral-400">
+      Status: {pix.status}
+    </p>
+
+    {pix.qrCode && (
+      <>
+      {qrCodeImagem && (
+  <div className="mt-5 flex justify-center">
+    <img
+      src={qrCodeImagem}
+      alt="QR Code para pagamento via Pix"
+      width={280}
+      height={280}
+      className="bg-white p-3"
+    />
+  </div>
+)}
+
+<p className="mt-4 text-center text-sm text-neutral-400">
+  Escaneie o QR Code com o aplicativo do seu banco
+</p>
+        <p className="mt-5 text-xs font-bold uppercase text-neutral-400">
+          Pix copia e cola
+        </p>
+
+        <textarea
+          readOnly
+          value={pix.qrCode}
+          className="mt-2 h-28 w-full resize-none border border-white/10 bg-neutral-950 p-3 text-xs text-neutral-300 outline-none"
+        />
+
+        <button
+          type="button"
+          onClick={() =>
+            navigator.clipboard.writeText(pix.qrCode || "")
+          }
+          className="mt-3 w-full border border-white/20 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] transition hover:border-red-600 hover:text-red-500"
+        >
+          Copiar código Pix
+        </button>
+      </>
+    )}
+
+    {pix.ticketUrl && (
+      <a
+        href={pix.ticketUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 flex w-full items-center justify-center border border-red-700 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-red-500 transition hover:bg-red-700 hover:text-white"
+      >
+        Abrir pagamento Pix
+      </a>
+    )}
+  </div>
+)}
           </aside>
         </form>
       </div>
