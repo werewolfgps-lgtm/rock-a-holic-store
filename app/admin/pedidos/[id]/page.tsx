@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
-import StatusPedido from "@/app/api/admin/pedidos/[id]/StatusPedido";
+import StatusPedido from "./StatusPedido";
 
 type ItemPedido = {
   nome: string;
