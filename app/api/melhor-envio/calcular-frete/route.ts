@@ -3,7 +3,7 @@ import { getMelhorEnvioToken } from "../token";
 
 export async function POST(request: NextRequest) {
   try {
-    const { cepDestino } = await request.json();
+    const { cepDestino, quantidade = 1 } = await request.json();
 
     if (!cepDestino) {
       return NextResponse.json(
@@ -21,6 +21,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const quantidadeItens = Math.max(1, Number(quantidade) || 1);
+
+    const pesoTotal = 0.3 * quantidadeItens;
+
+    // embalagem-base de 30 x 20 cm
+    // aumenta a altura conforme entram mais camisetas
+    const alturaPacote = 4 + (quantidadeItens - 1) * 2;
+
     const token = await getMelhorEnvioToken();
 
     const resposta = await fetch(
@@ -31,7 +39,7 @@ export async function POST(request: NextRequest) {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
           "Content-Type": "application/json",
-          "User-Agent": "Rock-a-Holic Store",
+          "User-Agent": "Rock-a-Holic Store (edsonrodrigues400@hotmail.com)",
         },
         body: JSON.stringify({
           from: {
@@ -41,10 +49,10 @@ export async function POST(request: NextRequest) {
             postal_code: cepLimpo,
           },
           package: {
-            height: 4,
+            height: alturaPacote,
             width: 20,
             length: 30,
-            weight: 0.3,
+            weight: pesoTotal,
           },
         }),
       }
