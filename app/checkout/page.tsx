@@ -25,6 +25,14 @@ export default function CheckoutPage() {
     cidade: "",
     estado: "",
   });
+const [gerandoPix, setGerandoPix] = useState(false);
+const [erroPagamento, setErroPagamento] = useState("");
+const [pix, setPix] = useState<{
+  orderId: string;
+  status: string;
+  qrCode: string | null;
+  ticketUrl: string | null;
+} | null>(null);
 
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [erroCep, setErroCep] = useState("");
@@ -116,16 +124,62 @@ export default function CheckoutPage() {
   }
 }
 
-  function finalizarCheckout(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function finalizarCheckout(
+  event: FormEvent<HTMLFormElement>
+) {
+  event.preventDefault();
 
-    if (itens.length === 0) {
-      alert("Seu carrinho está vazio.");
-      return;
+  if (itens.length === 0) {
+    alert("Seu carrinho está vazio.");
+    return;
+  }
+
+  if (!frete) {
+    alert("Nenhuma forma de entrega foi selecionada.");
+    return;
+  }
+
+  try {
+    setGerandoPix(true);
+    setErroPagamento("");
+
+    const resposta = await fetch("/api/mercado-pago/pix", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        valor: total,
+      }),
+    });
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        resultado.erro ||
+          "Não foi possível gerar o pagamento Pix."
+      );
     }
 
-    alert("Dados recebidos com sucesso!");
+    setPix({
+      orderId: resultado.orderId,
+      status: resultado.status,
+      qrCode: resultado.qrCode,
+      ticketUrl: resultado.ticketUrl,
+    });
+  } catch (error) {
+    console.error(error);
+
+    setErroPagamento(
+      error instanceof Error
+        ? error.message
+        : "Não foi possível gerar o pagamento Pix."
+    );
+  } finally {
+    setGerandoPix(false);
   }
+}
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -395,21 +449,28 @@ export default function CheckoutPage() {
       {frete && (
         <p className="mt-1 text-xs text-neutral-500">
           {frete.empresa
-            ? `${frete.empresa} - ${frete.nome}`
-            : frete.nome}
-          {" • "}
-          {frete.prazo} dia(s)
+          ? `${frete.empresa} - ${frete.nome}`
+          : frete.nome}
+
+          {frete.prazo !== null && (
+           <>
+       {" • "}
+       {frete.prazo} dia(s)
+  </>
+)}
         </p>
       )}
     </div>
 
     <span>
       {frete
-        ? valorFrete.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })
-        : "Não selecionado"}
+    ? frete.preco === 0
+    ? "Grátis"
+    : valorFrete.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      })
+  : "Não selecionado"}
     </span>
   </div>
 
