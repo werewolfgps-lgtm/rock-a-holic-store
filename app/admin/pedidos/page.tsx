@@ -80,7 +80,9 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
     COUNT(*) FILTER (WHERE status_pedido = 'enviado')::int AS enviados,
     COUNT(*) FILTER (WHERE status_pedido = 'entregue')::int AS entregues
   FROM pedidos
+  WHERE status_pagamento = 'processed'
 `) as {
+
   todos: number;
   novos: number;
   preparando: number;
@@ -105,7 +107,8 @@ const quantidadeStatus = contagens[0];
         total,
         created_at
       FROM pedidos
-      WHERE (
+      WHERE status_pagamento = 'processed'
+  AND (
         ${busca} = ''
         OR nome_cliente ILIKE ${`%${busca}%`}
         OR email_cliente ILIKE ${`%${busca}%`}
@@ -128,8 +131,9 @@ const quantidadeStatus = contagens[0];
         total,
         created_at
       FROM pedidos
-      WHERE status_pedido = ${statusFiltro}
-        AND (
+      WHERE status_pagamento = 'processed'
+      AND status_pedido = ${statusFiltro}
+      AND (
           ${busca} = ''
           OR nome_cliente ILIKE ${`%${busca}%`}
           OR email_cliente ILIKE ${`%${busca}%`}

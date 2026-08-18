@@ -349,6 +349,34 @@ async function finalizarCheckout(
       qrCode: resultado.qrCode,
       ticketUrl: resultado.ticketUrl,
     });
+
+    // SALVA O PEDIDO AINDA PENDENTE.
+// Assim o webhook consegue confirmá-lo mesmo se o cliente fechar a página.
+const respostaPedidoPendente = await fetch("/api/pedidos", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    mercadoPagoOrderId: resultado.orderId,
+    statusPagamento: resultado.status,
+    cliente: dados,
+    frete,
+    subtotal,
+    total,
+    itens,
+  }),
+});
+
+const pedidoPendente = await respostaPedidoPendente.json();
+
+if (!respostaPedidoPendente.ok) {
+  throw new Error(
+    pedidoPendente.erro ||
+      "Não foi possível registrar o pedido."
+  );
+}
+
     if (resultado.qrCode) {
   const imagemQrCode = await QRCode.toDataURL(resultado.qrCode, {
     width: 280,
