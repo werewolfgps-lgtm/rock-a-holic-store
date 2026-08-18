@@ -44,7 +44,7 @@ const [pix, setPix] = useState<{
   const [erroCep, setErroCep] = useState("");
   const [frete, setFrete] = useState<{
   cep: string;
-  id: number;
+  id: number | string;
   nome: string;
   empresa: string;
   preco: number;
@@ -177,6 +177,7 @@ const [pix, setPix] = useState<{
   function atualizarCampo(
     campo: keyof typeof dados,
     valor: string
+    
   ) {
     setDados((dadosAtuais) => ({
       ...dadosAtuais,
@@ -186,6 +187,21 @@ const [pix, setPix] = useState<{
 
   async function buscarCep(cepDigitado: string) {
   const cepLimpo = cepDigitado.replace(/\D/g, "");
+
+ // Se o cliente mudar o CEP depois de escolher o frete,
+// invalida a cotação antiga para evitar cobrança incorreta.
+if (
+  frete &&
+  frete.id !== "retirada-local" &&
+  frete.cep.replace(/\D/g, "") !== cepLimpo
+) {
+  setFrete(null);
+  localStorage.removeItem("rockaholic-frete");
+
+  setErroCep(
+    "CEP alterado. O frete anterior foi removido. Volte ao carrinho para recalcular a entrega."
+  );
+}
 
   if (cepLimpo.length !== 8) {
     return;

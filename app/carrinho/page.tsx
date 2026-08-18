@@ -398,7 +398,7 @@ useEffect(() => {
   localStorage.setItem(
     "rockaholic-frete",
     JSON.stringify({
-      cep,
+      cep: cep.replace(/\D/g, ""),
       id: frete.id,
       nome: frete.name,
       empresa: frete.company?.name || "",
