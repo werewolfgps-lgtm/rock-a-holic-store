@@ -217,7 +217,38 @@ const quantidadeStatus = contagens[0];
 </div>
 
          <LogoutButton />
-        </div>
+                </div>
+                
+                {/* BUSCA DE PEDIDOS */}
+<form
+  action="/admin/pedidos"
+  method="GET"
+  className="mt-6 flex max-w-xl gap-2"
+>
+  {statusFiltro !== "todos" && (
+    <input
+      type="hidden"
+      name="status"
+      value={statusFiltro}
+    />
+  )}
+
+  <input
+    type="text"
+    name="busca"
+    defaultValue={busca}
+    placeholder="Buscar por pedido, nome ou e-mail"
+    className="min-w-0 flex-1 border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-red-600"
+  />
+
+  <button
+    type="submit"
+    className="bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-[0.1em] transition hover:bg-red-800"
+  >
+    Buscar
+  </button>
+</form>
+
         <div className="mt-10 overflow-x-auto border border-white/10">
           <table className="w-full min-w-[1100px] text-left text-sm">
             <thead className="bg-neutral-950 text-xs uppercase tracking-[0.1em] text-neutral-500">
@@ -260,36 +291,6 @@ const quantidadeStatus = contagens[0];
       {pedido.email_cliente}
     </p>
   </td>
-
-{/* BUSCA DE PEDIDOS */}
-<form
-  action="/admin/pedidos"
-  method="GET"
-  className="mt-6 flex max-w-xl gap-2"
->
-  {statusFiltro !== "todos" && (
-    <input
-      type="hidden"
-      name="status"
-      value={statusFiltro}
-    />
-  )}
-
-  <input
-    type="text"
-    name="busca"
-    defaultValue={busca}
-    placeholder="Buscar por pedido, nome ou e-mail"
-    className="min-w-0 flex-1 border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-red-600"
-  />
-
-  <button
-    type="submit"
-    className="bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-[0.1em] transition hover:bg-red-800"
-  >
-    Buscar
-  </button>
-</form>
 
     {/* PAGAMENTO */}
   <td className="px-5 py-5">
