@@ -22,9 +22,13 @@ type Pedido = {
 export default async function AdminPedidosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    busca?: string;
+  }>;
 }) {
   const params = await searchParams;
+  const busca = (params.busca || "").trim();
 
 const statusSelecionado = params.status || "todos";
 
@@ -87,7 +91,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
 const quantidadeStatus = contagens[0];
 
   const pedidos = statusFiltro === "todos"
-    ? ((await sql`
+  ? ((await sql`
       SELECT
         id,
         mercado_pago_order_id,
@@ -101,6 +105,12 @@ const quantidadeStatus = contagens[0];
         total,
         created_at
       FROM pedidos
+      WHERE (
+        ${busca} = ''
+        OR nome_cliente ILIKE ${`%${busca}%`}
+        OR email_cliente ILIKE ${`%${busca}%`}
+        OR CAST(id AS TEXT) = ${busca.replace("#", "")}
+      )
       ORDER BY id DESC
       LIMIT 100
     `) as Pedido[])
@@ -119,12 +129,49 @@ const quantidadeStatus = contagens[0];
         created_at
       FROM pedidos
       WHERE status_pedido = ${statusFiltro}
+        AND (
+          ${busca} = ''
+          OR nome_cliente ILIKE ${`%${busca}%`}
+          OR email_cliente ILIKE ${`%${busca}%`}
+          OR CAST(id AS TEXT) = ${busca.replace("#", "")}
+        )
       ORDER BY id DESC
       LIMIT 100
     `) as Pedido[]);
 
+    {/* BUSCA DE PEDIDOS */}
+<form
+  action="/admin/pedidos"
+  method="GET"
+  className="mt-6 flex max-w-xl gap-2"
+>
+  {statusFiltro !== "todos" && (
+    <input
+      type="hidden"
+      name="status"
+      value={statusFiltro}
+    />
+  )}
+
+  <input
+    type="text"
+    name="busca"
+    defaultValue={busca}
+    placeholder="Buscar por pedido, nome ou e-mail"
+    className="min-w-0 flex-1 border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-red-600"
+  />
+
+  <button
+    type="submit"
+    className="bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-[0.1em] transition hover:bg-red-800"
+  >
+    Buscar
+  </button>
+</form>
+
   return (
-    <main className="min-h-screen bg-black px-6 py-12 text-white">
+
+        <main className="min-h-screen bg-black px-6 py-12 text-white">
       <div className="mx-auto max-w-7xl">
         <p className="text-xs font-black uppercase tracking-[0.3em] text-red-600">
           Rock-a-Holic Store
