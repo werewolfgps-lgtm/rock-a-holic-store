@@ -239,9 +239,26 @@ export default async function PedidoDetalhesPage({
                   </p>
                 </div>
 
-                <p className="font-bold text-[#e7cfaa]">
-                  {item.preco}
-                </p>
+                <div className="text-right">
+  <p className="text-sm text-neutral-500">
+    {item.preco} × {item.quantidade}
+  </p>
+
+  <p className="mt-1 font-bold text-[#e7cfaa]">
+    {(
+      Number(
+        item.preco
+          .replace("R$", "")
+          .replace(".", "")
+          .replace(",", ".")
+          .trim()
+      ) * item.quantidade
+    ).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    })}
+  </p>
+</div>
               </div>
             ))}
           </div>
