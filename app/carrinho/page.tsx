@@ -425,12 +425,19 @@ useEffect(() => {
               </p>
 
               <p className="mt-1 text-xs text-neutral-500">
-                {frete.id === "retirada-local"
-                ? "Retirada combinada após a confirmação do pedido"
-                : `Prazo: ${
-                frete.custom_delivery_time || frete.delivery_time
-                } dia(s)`}
-              </p>
+  {frete.id === "retirada-local" ? (
+    "Retirada combinada após a confirmação do pedido"
+  ) : (
+    <>
+      Produção: até 2 dias úteis
+      <br />
+      Transporte:{" "}
+      {frete.custom_delivery_time ||
+        frete.delivery_time}{" "}
+      dia(s)
+    </>
+  )}
+</p>
             </div>
 
             <span className="whitespace-nowrap text-sm font-bold text-[#e7cfaa]">

@@ -562,14 +562,18 @@ const [pix, setPix] = useState<{
           : frete.nome}
 
           {frete.prazo !== null && (
-           <>
-       {" • "}
-       {frete.prazo} dia(s)
-  </>
+  <span className="block">
+    Produção: até 2 dias úteis
+    <br />
+    Transporte: {frete.prazo} dia(s)
+  </span>
 )}
         </p>
       )}
     </div>
+    <p className="mt-2 text-xs text-neutral-500">
+  O prazo de transporte começa após a produção do pedido.
+</p>
 
     <span>
       {frete
