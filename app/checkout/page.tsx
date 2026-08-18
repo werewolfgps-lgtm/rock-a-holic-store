@@ -41,8 +41,10 @@ const [pix, setPix] = useState<{
 } | null>(null);
 
   const [buscandoCep, setBuscandoCep] = useState(false);
-  const [erroCep, setErroCep] = useState("");
-  const [frete, setFrete] = useState<{
+const [erroCep, setErroCep] = useState("");
+
+// FRETE SELECIONADO
+const [frete, setFrete] = useState<{
   cep: string;
   id: number | string;
   nome: string;
@@ -50,6 +52,11 @@ const [pix, setPix] = useState<{
   preco: number;
   prazo: number | null;
 } | null>(null);
+
+// RECÁLCULO DO FRETE NO CHECKOUT
+const [opcoesFrete, setOpcoesFrete] = useState<any[]>([]);
+const [recalculandoFrete, setRecalculandoFrete] = useState(false);
+const [avisoFrete, setAvisoFrete] = useState("");
 
   useEffect(() => {
   const carrinhoSalvo = localStorage.getItem("rockaholic-carrinho");
@@ -185,26 +192,85 @@ const [pix, setPix] = useState<{
     }));
   }
 
-  async function buscarCep(cepDigitado: string) {
-  const cepLimpo = cepDigitado.replace(/\D/g, "");
+  // RECALCULA O FRETE QUANDO O CEP MUDA NO CHECKOUT
+async function recalcularFreteCheckout(cepDestino: string) {
+  try {
+    setRecalculandoFrete(true);
+    setOpcoesFrete([]);
 
- // Se o cliente mudar o CEP depois de escolher o frete,
-// invalida a cotação antiga para evitar cobrança incorreta.
-if (
-  frete &&
-  frete.id !== "retirada-local" &&
-  frete.cep.replace(/\D/g, "") !== cepLimpo
-) {
-  setFrete(null);
-  localStorage.removeItem("rockaholic-frete");
+    const totalItens = itens.reduce(
+      (soma, item) => soma + item.quantidade,
+      0
+    );
 
-  setErroCep(
-    "CEP alterado. O frete anterior foi removido. Volte ao carrinho para recalcular a entrega."
-  );
+    const resposta = await fetch(
+      "/api/melhor-envio/calcular-frete",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cepDestino,
+          quantidade: totalItens,
+        }),
+      }
+    );
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        resultado.erro ||
+          "Não foi possível recalcular o frete."
+      );
+    }
+
+    const opcoesValidas = resultado.fretes.filter(
+      (opcao: any) =>
+        opcao.price &&
+        !opcao.error
+    );
+
+    setOpcoesFrete(opcoesValidas);
+
+    setAvisoFrete(
+      "Selecione novamente a forma de entrega para o novo CEP."
+    );
+  } catch (error) {
+    console.error(error);
+
+    setAvisoFrete(
+      "Não foi possível recalcular o frete para este CEP."
+    );
+  } finally {
+    setRecalculandoFrete(false);
+  }
 }
+
+// BUSCA O ENDEREÇO E VALIDA O FRETE
+async function buscarCep(cepDigitado: string) {
+  const cepLimpo = cepDigitado.replace(/\D/g, "");
 
   if (cepLimpo.length !== 8) {
     return;
+  }
+
+  // Se o CEP mudou, remove a cotação anterior
+  // e busca novas opções de entrega.
+  if (
+    frete &&
+    frete.id !== "retirada-local" &&
+    frete.cep.replace(/\D/g, "") !== cepLimpo
+  ) {
+    setFrete(null);
+    localStorage.removeItem("rockaholic-frete");
+
+    setAvisoFrete(
+      "CEP alterado. Estamos recalculando as opções de entrega..."
+    );
+
+    await recalcularFreteCheckout(cepLimpo);
   }
 
   try {
@@ -237,8 +303,9 @@ if (
     setBuscandoCep(false);
   }
 }
-
-  async function finalizarCheckout(
+  
+// FINALIZA O CHECKOUT
+async function finalizarCheckout(
   event: FormEvent<HTMLFormElement>
 ) {
   event.preventDefault();
@@ -427,6 +494,96 @@ if (
   <p className="mt-2 text-xs font-bold text-red-500">
     {erroCep}
   </p>
+)}
+
+{/* RECÁLCULO DE FRETE NO CHECKOUT */}
+{recalculandoFrete && (
+  <p className="mt-3 text-xs text-neutral-500">
+    Recalculando opções de entrega...
+  </p>
+)}
+
+{avisoFrete && (
+  <p className="mt-3 text-xs font-bold text-[#e7cfaa]">
+    {avisoFrete}
+  </p>
+)}
+
+{opcoesFrete.length > 0 && (
+  <div className="mt-5 space-y-3 sm:col-span-2">
+    <p className="text-xs font-black uppercase tracking-[0.15em] text-neutral-400">
+      Selecione a nova forma de entrega
+    </p>
+
+    {opcoesFrete.map((opcao: any) => {
+      const preco = Number(
+        opcao.custom_price || opcao.price || 0
+      );
+
+      const prazo =
+        opcao.custom_delivery_time ||
+        opcao.delivery_time ||
+        null;
+
+      const empresa =
+        opcao.company?.name || "";
+
+      return (
+        <button
+          key={opcao.id}
+          type="button"
+          onClick={() => {
+            const novoFrete = {
+              cep: dados.cep.replace(/\D/g, ""),
+              id: opcao.id,
+              nome: opcao.name,
+              empresa,
+              preco,
+              prazo,
+            };
+
+            setFrete(novoFrete);
+
+            localStorage.setItem(
+              "rockaholic-frete",
+              JSON.stringify(novoFrete)
+            );
+
+            setOpcoesFrete([]);
+            setAvisoFrete("");
+          }}
+          className="w-full border border-white/10 bg-black p-4 text-left transition hover:border-red-700"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-bold">
+                {empresa
+                  ? `${empresa} - ${opcao.name}`
+                  : opcao.name}
+              </p>
+
+              <p className="mt-1 text-xs text-neutral-500">
+                Produção: até 2 dias úteis
+                {prazo !== null && (
+                  <>
+                    <br />
+                    Transporte: {prazo} dia(s)
+                  </>
+                )}
+              </p>
+            </div>
+
+            <span className="font-black text-[#e7cfaa]">
+              {preco.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
+            </span>
+          </div>
+        </button>
+      );
+    })}
+  </div>
 )}
                 </div>
 
