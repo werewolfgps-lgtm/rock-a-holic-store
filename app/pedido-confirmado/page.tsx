@@ -29,8 +29,8 @@ function ConteudoPedidoConfirmado() {
               Número do pedido
             </p>
 
-            <p className="mt-2 break-all font-bold text-[#e7cfaa]">
-              {pedido}
+            <p className="mt-2 text-2xl font-black text-[#e7cfaa]">
+            #{pedido}
             </p>
           </div>
         )}
@@ -39,8 +39,14 @@ function ConteudoPedidoConfirmado() {
           <p className="font-bold">Pagamento aprovado</p>
 
           <p className="mt-2 text-sm text-neutral-400">
-            Agora vamos preparar seu pedido para a próxima etapa.
-          </p>
+  Agora vamos iniciar a produção do seu pedido.
+  O prazo de produção é de até 2 dias úteis.
+</p>
+
+<p className="mt-3 text-sm text-neutral-500">
+  Após a produção, o pedido seguirá para a modalidade
+  de entrega escolhida.
+</p>
         </div>
 
         <Link

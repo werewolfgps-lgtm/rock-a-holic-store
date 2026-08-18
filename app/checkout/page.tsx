@@ -137,10 +137,9 @@ const [pix, setPix] = useState<{
   }
   
   router.push(
-    `/pedido-confirmado?pedido=${encodeURIComponent(
-      pix.orderId
-    )}`
-  );
+  `/pedido-confirmado?pedido=${resultadoPedido.pedido.id}`
+);
+
 } catch (error) {
   console.error("Erro ao salvar pedido:", error);
 
