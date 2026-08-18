@@ -139,36 +139,6 @@ const quantidadeStatus = contagens[0];
       LIMIT 100
     `) as Pedido[]);
 
-    {/* BUSCA DE PEDIDOS */}
-<form
-  action="/admin/pedidos"
-  method="GET"
-  className="mt-6 flex max-w-xl gap-2"
->
-  {statusFiltro !== "todos" && (
-    <input
-      type="hidden"
-      name="status"
-      value={statusFiltro}
-    />
-  )}
-
-  <input
-    type="text"
-    name="busca"
-    defaultValue={busca}
-    placeholder="Buscar por pedido, nome ou e-mail"
-    className="min-w-0 flex-1 border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-red-600"
-  />
-
-  <button
-    type="submit"
-    className="bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-[0.1em] transition hover:bg-red-800"
-  >
-    Buscar
-  </button>
-</form>
-
   return (
 
         <main className="min-h-screen bg-black px-6 py-12 text-white">
@@ -290,6 +260,37 @@ const quantidadeStatus = contagens[0];
       {pedido.email_cliente}
     </p>
   </td>
+
+{/* BUSCA DE PEDIDOS */}
+<form
+  action="/admin/pedidos"
+  method="GET"
+  className="mt-6 flex max-w-xl gap-2"
+>
+  {statusFiltro !== "todos" && (
+    <input
+      type="hidden"
+      name="status"
+      value={statusFiltro}
+    />
+  )}
+
+  <input
+    type="text"
+    name="busca"
+    defaultValue={busca}
+    placeholder="Buscar por pedido, nome ou e-mail"
+    className="min-w-0 flex-1 border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white outline-none focus:border-red-600"
+  />
+
+  <button
+    type="submit"
+    className="bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-[0.1em] transition hover:bg-red-800"
+  >
+    Buscar
+  </button>
+</form>
+
     {/* PAGAMENTO */}
   <td className="px-5 py-5">
   <span className="inline-block border border-green-700/40 bg-green-950/20 px-3 py-2 text-xs font-bold uppercase text-green-500">
