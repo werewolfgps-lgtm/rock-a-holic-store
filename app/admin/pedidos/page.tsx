@@ -68,8 +68,26 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
 
   const sql = neon(databaseUrl);
 
+  const contagens = (await sql`
+  SELECT
+    COUNT(*)::int AS todos,
+    COUNT(*) FILTER (WHERE status_pedido = 'novo')::int AS novos,
+    COUNT(*) FILTER (WHERE status_pedido = 'preparando')::int AS preparando,
+    COUNT(*) FILTER (WHERE status_pedido = 'enviado')::int AS enviados,
+    COUNT(*) FILTER (WHERE status_pedido = 'entregue')::int AS entregues
+  FROM pedidos
+`) as {
+  todos: number;
+  novos: number;
+  preparando: number;
+  enviados: number;
+  entregues: number;
+}[];
+
+const quantidadeStatus = contagens[0];
+
   const pedidos = statusFiltro === "todos"
-  ? ((await sql`
+    ? ((await sql`
       SELECT
         id,
         mercado_pago_order_id,
@@ -133,7 +151,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
         : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
     }`}
   >
-    Todos
+    Todos ({quantidadeStatus.todos})
   </Link>
 
   <Link
@@ -144,7 +162,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
         : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
     }`}
   >
-    Novos
+          Novos ({quantidadeStatus.novos})
   </Link>
 
   <Link
@@ -155,7 +173,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
         : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
     }`}
   >
-    Preparando
+          Preparando ({quantidadeStatus.preparando})
   </Link>
 
   <Link
@@ -166,7 +184,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
         : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
     }`}
   >
-    Enviados
+        Enviados ({quantidadeStatus.enviados})
   </Link>
 
   <Link
@@ -177,7 +195,7 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
         : "border-white/10 text-neutral-400 hover:border-red-600 hover:text-white"
     }`}
   >
-    Entregues
+        Entregues ({quantidadeStatus.entregues})
   </Link>
 </div>
 
