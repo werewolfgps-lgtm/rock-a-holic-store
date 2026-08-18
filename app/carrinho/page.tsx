@@ -126,6 +126,7 @@ const totalComFrete = total + valorFrete;
     setErroFrete("");
     setFretes([]);
     setFreteSelecionado(null);
+    localStorage.removeItem("rockaholic-frete");
 
     const resposta = await fetch(
       "/api/melhor-envio/calcular-frete",
@@ -184,6 +185,16 @@ setFretes([retiradaLocal, ...opcoesValidas]);
     setCalculandoFrete(false);
   }
 }
+
+useEffect(() => {
+  const cepLimpo = cep.replace(/\D/g, "");
+
+  if (cepLimpo.length !== 8) {
+    return;
+  }
+
+  calcularFrete();
+}, [totalItens]);
 
   return (
     <main className="min-h-screen bg-black text-white">
