@@ -14,6 +14,11 @@ type ItemCarrinho = {
 export default function MiniCarrinho() {
   const [aberto, setAberto] = useState(false);
   const [itens, setItens] = useState<ItemCarrinho[]>([]);
+  const [cep, setCep] = useState("");
+  const [calculandoFrete, setCalculandoFrete] = useState(false);
+  const [erroFrete, setErroFrete] = useState("");
+  const [fretes, setFretes] = useState<any[]>([]);
+  const [freteSelecionado, setFreteSelecionado] = useState<any | null>(null);
 
   function carregarCarrinho() {
     try {
@@ -32,17 +37,23 @@ export default function MiniCarrinho() {
   }
 
   function salvarCarrinho(novosItens: ItemCarrinho[]) {
-    setItens(novosItens);
+  setItens(novosItens);
 
-    localStorage.setItem(
-      "rockaholic-carrinho",
-      JSON.stringify(novosItens)
-    );
+  localStorage.setItem(
+    "rockaholic-carrinho",
+    JSON.stringify(novosItens)
+  );
 
-    window.dispatchEvent(
-      new Event("rockaholic-carrinho-atualizado")
-    );
+  window.dispatchEvent(
+    new Event("rockaholic-carrinho-atualizado")
+  );
+
+  const cepLimpo = cep.replace(/\D/g, "");
+
+  if (cepLimpo.length === 8) {
+    calcularFrete(cepLimpo, novosItens);
   }
+}
 
   function aumentarQuantidade(index: number) {
     const novosItens = itens.map((item, itemIndex) =>
@@ -114,7 +125,114 @@ export default function MiniCarrinho() {
       converterPreco(item.preco) * item.quantidade,
     0
   );
+  const valorFrete = freteSelecionado?.preco || 0;
 
+const total = subtotal + valorFrete;
+
+  {/* RESUMO DO PEDIDO */}
+<div className="mb-5 space-y-3">
+  <div className="flex items-center justify-between">
+    <span className="text-xs font-bold uppercase text-neutral-300">
+      Subtotal
+    </span>
+
+    <span className="font-bold text-white">
+      {subtotal.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      })}
+    </span>
+  </div>
+
+  <div className="flex items-center justify-between">
+    <span className="text-xs font-bold uppercase text-neutral-300">
+      Entrega
+    </span>
+
+    <span className="font-bold text-white">
+      {freteSelecionado
+        ? valorFrete === 0
+          ? "Grátis"
+          : valorFrete.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })
+        : "Selecione"}
+    </span>
+  </div>
+
+  <div className="border-t border-white/10 pt-4">
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-black uppercase tracking-[0.12em] text-white">
+        Total
+      </span>
+
+      <span className="text-xl font-black text-[#e7cfaa]">
+        {total.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        })}
+      </span>
+    </div>
+  </div>
+</div>
+    async function calcularFrete(
+  cepInformado: string,
+  itensInformados: ItemCarrinho[] = itens
+) {
+  const cepLimpo = cepInformado.replace(/\D/g, "");
+
+  if (cepLimpo.length !== 8) {
+    setErroFrete("Informe um CEP válido com 8 dígitos.");
+    return;
+  }
+
+  try {
+    setCalculandoFrete(true);
+    setErroFrete("");
+    setFretes([]);
+    setFreteSelecionado(null);
+    localStorage.removeItem("rockaholic-frete");
+
+    const totalItens = itensInformados.reduce(
+  (soma, item) => soma + item.quantidade,
+  0
+);
+
+    const resposta = await fetch(
+      "/api/melhor-envio/calcular-frete",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cepDestino: cepLimpo,
+          quantidade: totalItens,
+        }),
+      }
+    );
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        resultado.erro || "Não foi possível calcular o frete."
+      );
+    }
+
+    const opcoesValidas = resultado.fretes.filter(
+      (opcao: any) => opcao.price && !opcao.error
+    );
+
+    setFretes(opcoesValidas);
+  } catch (error) {
+    console.error(error);
+    setErroFrete("Não foi possível calcular o frete para este CEP.");
+  } finally {
+    setCalculandoFrete(false);
+  }
+}
   return (
     <>
       {/* FUNDO ESCURECIDO */}
@@ -233,6 +351,168 @@ export default function MiniCarrinho() {
 
           {itens.length > 0 && (
             <div className="border-t border-white/10 p-6">
+                <div className="mb-5 border-b border-white/10 pb-5">
+  <p className="text-xs font-black uppercase tracking-[0.15em] text-white">
+    Calcular entrega
+  </p>
+
+  <div className="mt-3 flex gap-2">
+    <input
+      type="text"
+      value={cep}
+      maxLength={9}
+      placeholder="00000-000"
+      onChange={(event) => {
+  const valor = event.target.value;
+
+  setCep(valor);
+
+  const cepLimpo = valor.replace(/\D/g, "");
+
+  if (cepLimpo.length === 8) {
+    calcularFrete(valor);
+  }
+}}
+      className="min-w-0 flex-1 border border-white/10 bg-black px-3 py-3 text-sm text-white outline-none focus:border-red-700"
+    />
+
+    <button
+      type="button"      
+      onClick={() => calcularFrete(cep)}
+      disabled={calculandoFrete}
+      className="bg-red-700 px-4 py-3 text-xs font-black uppercase text-white transition hover:bg-red-800 disabled:opacity-50"
+    >
+      {calculandoFrete ? "..." : "Calcular"}
+    </button>
+  </div>
+
+  {erroFrete && (
+    <p className="mt-2 text-xs font-bold text-red-500">
+      {erroFrete}
+    </p>
+  )}
+  {/* OPÇÕES DE ENTREGA */}
+{!calculandoFrete && cep.replace(/\D/g, "").length === 8 && (
+  <div className="mt-4 space-y-2">
+
+    {/* RETIRADA NO LOCAL */}
+    <button
+      type="button"
+      onClick={() => {
+        const novoFrete = {
+          cep: cep.replace(/\D/g, ""),
+          id: "retirada-local",
+          nome: "Retirada no local",
+          empresa: "Rock-a-Holic Store",
+          preco: 0,
+          prazo: 0,
+        };
+
+        setFreteSelecionado(novoFrete);
+
+        localStorage.setItem(
+          "rockaholic-frete",
+          JSON.stringify(novoFrete)
+        );
+      }}
+      className={`w-full border p-3 text-left transition ${
+        freteSelecionado?.id === "retirada-local"
+          ? "border-red-600 bg-red-950/20"
+          : "border-white/10 bg-black hover:border-red-700"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black text-white">
+            Retirada no local
+          </p>
+
+          <p className="mt-1 text-[10px] text-neutral-400">
+            Retire conosco após a produção.
+          </p>
+        </div>
+
+        <span className="text-xs font-black text-[#e7cfaa]">
+          Grátis
+        </span>
+      </div>
+    </button>
+
+    {/* TRANSPORTADORAS */}
+    {fretes.map((opcao: any) => {
+      const preco = Number(
+        opcao.custom_price || opcao.price || 0
+      );
+
+      const prazo =
+        opcao.custom_delivery_time ||
+        opcao.delivery_time ||
+        null;
+
+      const empresa =
+        opcao.company?.name || "";
+
+      return (
+        <button
+          key={opcao.id}
+          type="button"
+          onClick={() => {
+            const novoFrete = {
+              cep: cep.replace(/\D/g, ""),
+              id: opcao.id,
+              nome: opcao.name,
+              empresa,
+              preco,
+              prazo,
+            };
+
+            setFreteSelecionado(novoFrete);
+
+            localStorage.setItem(
+              "rockaholic-frete",
+              JSON.stringify(novoFrete)
+            );
+          }}
+          className={`w-full border p-3 text-left transition ${
+            freteSelecionado?.id === opcao.id
+              ? "border-red-600 bg-red-950/20"
+              : "border-white/10 bg-black hover:border-red-700"
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-white">
+                {empresa
+                  ? `${empresa} - ${opcao.name}`
+                  : opcao.name}
+              </p>
+
+              <p className="mt-1 text-[10px] text-neutral-400">
+                Produção: até 2 dias úteis
+
+                {prazo !== null && (
+                  <>
+                    <br />
+                    Transporte: {prazo} dia(s)
+                  </>
+                )}
+              </p>
+            </div>
+
+            <span className="shrink-0 text-xs font-black text-[#e7cfaa]">
+              {preco.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
+            </span>
+          </div>
+        </button>
+      );
+    })}
+  </div>
+)}
+
+</div>
               <div className="mb-5 flex items-center justify-between">
                 <span className="text-sm font-black uppercase tracking-[0.12em] text-white">
                   Subtotal
@@ -248,9 +528,32 @@ export default function MiniCarrinho() {
 
               <div className="space-y-3">
                 <Link
+  href={freteSelecionado ? "/checkout" : "#"}
+  onClick={(event) => {
+    if (!freteSelecionado) {
+      event.preventDefault();
+      setErroFrete(
+        "Selecione uma forma de entrega antes de finalizar a compra."
+      );
+      return;
+    }
+
+    setAberto(false);
+  }}
+  className={`block w-full px-5 py-4 text-center text-xs font-black uppercase tracking-[0.15em] transition ${
+    freteSelecionado
+      ? "bg-red-700 text-white hover:bg-red-800"
+      : "cursor-not-allowed bg-neutral-800 text-neutral-500"
+  }`}
+>
+  Finalizar compra
+</Link>
+                
+
+                <Link
                   href="/carrinho"
                   onClick={() => setAberto(false)}
-                  className="block w-full border border-red-700 bg-red-700 px-5 py-4 text-center text-xs font-black uppercase tracking-[0.15em] text-white transition hover:bg-red-800"
+                  className="block w-full border border-white/20 bg-black px-5 py-4 text-center text-xs font-black uppercase tracking-[0.15em] text-white transition hover:border-white/40"
                 >
                   Ver carrinho
                 </Link>
