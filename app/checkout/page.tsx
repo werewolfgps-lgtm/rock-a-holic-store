@@ -322,6 +322,29 @@ async function finalizarCheckout(
 ) {
   event.preventDefault();
 
+  // VALIDAÇÃO DOS DADOS OBRIGATÓRIOS DE ENTREGA
+if (
+  !dados.cep.trim() ||
+  !dados.numero.trim() ||
+  !dados.endereco.trim() ||
+  !dados.bairro.trim() ||
+  !dados.cidade.trim() ||
+  !dados.estado.trim()
+) {
+  alert(
+    "Preencha todos os dados de entrega antes de continuar: CEP, número, endereço, bairro, cidade e estado."
+  );
+
+  return;
+}
+
+const cepLimpo = dados.cep.replace(/\D/g, "");
+
+if (cepLimpo.length !== 8) {
+  alert("Informe um CEP válido com 8 dígitos.");
+  return;
+}
+
   if (itens.length === 0) {
     alert("Seu carrinho está vazio.");
     return;
