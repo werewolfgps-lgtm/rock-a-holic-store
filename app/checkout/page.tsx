@@ -194,7 +194,8 @@ const [avisoFrete, setAvisoFrete] = useState("");
 
   // RECALCULA O FRETE QUANDO O CEP MUDA NO CHECKOUT
 async function recalcularFreteCheckout(cepDestino: string) {
-  try {
+
+   try {
     setRecalculandoFrete(true);
     setOpcoesFrete([]);
 
@@ -231,12 +232,22 @@ async function recalcularFreteCheckout(cepDestino: string) {
         opcao.price &&
         !opcao.error
     );
+    console.log(
+  "Opções válidas recebidas no checkout:",
+  opcoesValidas
+);
 
     setOpcoesFrete(opcoesValidas);
-
-    setAvisoFrete(
-      "Selecione novamente a forma de entrega para o novo CEP."
-    );
+     
+    if (opcoesValidas.length > 0) {
+  setAvisoFrete(
+    "Selecione novamente a forma de entrega para o novo CEP."
+  );
+} else {
+  setAvisoFrete(
+    "Nenhuma transportadora atende este CEP. A retirada no local continua disponível."
+  );
+}
   } catch (error) {
     console.error(error);
 
@@ -256,22 +267,23 @@ async function buscarCep(cepDigitado: string) {
     return;
   }
 
-  // Se o CEP mudou, remove a cotação anterior
-  // e busca novas opções de entrega.
-  if (
-    frete &&
-    frete.id !== "retirada-local" &&
-    frete.cep.replace(/\D/g, "") !== cepLimpo
-  ) {
-    setFrete(null);
-    localStorage.removeItem("rockaholic-frete");
+// RECALCULA A ENTREGA SEMPRE QUE O CEP MUDAR
+const cepFreteAtual =
+  frete?.cep?.replace(/\D/g, "") || "";
 
-    setAvisoFrete(
-      "CEP alterado. Estamos recalculando as opções de entrega..."
-    );
+const precisaRecalcular =
+  !frete || cepFreteAtual !== cepLimpo;
 
-    await recalcularFreteCheckout(cepLimpo);
-  }
+if (precisaRecalcular) {
+  setFrete(null);
+  localStorage.removeItem("rockaholic-frete");
+
+  setAvisoFrete(
+    "Estamos recalculando as opções de entrega para este CEP..."
+  );
+
+  await recalcularFreteCheckout(cepLimpo);
+}
 
   try {
     setBuscandoCep(true);
@@ -282,7 +294,7 @@ async function buscarCep(cepDigitado: string) {
     );
 
     const endereco = await resposta.json();
-
+    
     if (endereco.erro) {
       setErroCep("CEP não encontrado.");
       return;
@@ -524,50 +536,38 @@ if (!respostaPedidoPendente.ok) {
   </p>
 )}
 
-{/* RECÁLCULO DE FRETE NO CHECKOUT */}
-{recalculandoFrete && (
-  <p className="mt-3 text-xs text-neutral-500">
-    Recalculando opções de entrega...
-  </p>
-)}
-
-{avisoFrete && (
-  <p className="mt-3 text-xs font-bold text-[#e7cfaa]">
-    {avisoFrete}
-  </p>
-)}
-
-{opcoesFrete.length > 0 && (
+{/* FORMAS DE ENTREGA RECALCULADAS NO CHECKOUT */}
+{dados.cep.replace(/\D/g, "").length === 8 &&
+  (recalculandoFrete || avisoFrete || opcoesFrete.length > 0) && (
   <div className="mt-5 space-y-3 sm:col-span-2">
-    <p className="text-xs font-black uppercase tracking-[0.15em] text-neutral-400">
-      Selecione a nova forma de entrega
-    </p>
 
-    {opcoesFrete.map((opcao: any) => {
-      const preco = Number(
-        opcao.custom_price || opcao.price || 0
-      );
+    {recalculandoFrete ? (
+      <p className="text-xs text-neutral-500">
+        Recalculando opções de entrega...
+      </p>
+    ) : (
+      <>
+        {avisoFrete && (
+          <p className="text-xs font-bold text-[#e7cfaa]">
+            {avisoFrete}
+          </p>
+        )}
 
-      const prazo =
-        opcao.custom_delivery_time ||
-        opcao.delivery_time ||
-        null;
+        <p className="text-xs font-black uppercase tracking-[0.15em] text-neutral-400">
+          Selecione a forma de entrega
+        </p>
 
-      const empresa =
-        opcao.company?.name || "";
-
-      return (
+        {/* RETIRADA NO LOCAL */}
         <button
-          key={opcao.id}
           type="button"
           onClick={() => {
             const novoFrete = {
               cep: dados.cep.replace(/\D/g, ""),
-              id: opcao.id,
-              nome: opcao.name,
-              empresa,
-              preco,
-              prazo,
+              id: "retirada-local",
+              nome: "Retirada no local",
+              empresa: "Rock-a-Holic Store",
+              preco: 0,
+              prazo: 0,
             };
 
             setFrete(novoFrete);
@@ -585,32 +585,91 @@ if (!respostaPedidoPendente.ok) {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="font-bold">
-                {empresa
-                  ? `${empresa} - ${opcao.name}`
-                  : opcao.name}
+                Retirada no local
               </p>
 
               <p className="mt-1 text-xs text-neutral-500">
-                Produção: até 2 dias úteis
-                {prazo !== null && (
-                  <>
-                    <br />
-                    Transporte: {prazo} dia(s)
-                  </>
-                )}
+                Retire seu pedido diretamente conosco após a produção.
               </p>
             </div>
 
             <span className="font-black text-[#e7cfaa]">
-              {preco.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })}
+              Grátis
             </span>
           </div>
         </button>
-      );
-    })}
+
+        {/* TRANSPORTADORAS */}
+        {opcoesFrete.map((opcao: any) => {
+          const preco = Number(
+            opcao.custom_price || opcao.price || 0
+          );
+
+          const prazo =
+            opcao.custom_delivery_time ||
+            opcao.delivery_time ||
+            null;
+
+          const empresa = opcao.company?.name || "";
+
+          return (
+            <button
+              key={opcao.id}
+              type="button"
+              onClick={() => {
+                const novoFrete = {
+                  cep: dados.cep.replace(/\D/g, ""),
+                  id: opcao.id,
+                  nome: opcao.name,
+                  empresa,
+                  preco,
+                  prazo,
+                };
+
+                setFrete(novoFrete);
+
+                localStorage.setItem(
+                  "rockaholic-frete",
+                  JSON.stringify(novoFrete)
+                );
+
+                setOpcoesFrete([]);
+                setAvisoFrete("");
+              }}
+              className="w-full border border-white/10 bg-black p-4 text-left transition hover:border-red-700"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-bold">
+                    {empresa
+                      ? `${empresa} - ${opcao.name}`
+                      : opcao.name}
+                  </p>
+
+                  <p className="mt-1 text-xs text-neutral-500">
+                    Produção: até 2 dias úteis
+
+                    {prazo !== null && (
+                      <>
+                        <br />
+                        Transporte: {prazo} dia(s)
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <span className="font-black text-[#e7cfaa]">
+                  {preco.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </>
+    )}
   </div>
 )}
                 </div>
