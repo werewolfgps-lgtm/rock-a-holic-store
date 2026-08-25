@@ -83,7 +83,9 @@ export default function ProductDetails({
     new Event("rockaholic-carrinho-atualizado")
   );
 
-  alert("Produto adicionado ao carrinho!");
+  window.dispatchEvent(
+  new Event("rockaholic-abrir-carrinho")
+);
 }
 
   return (
