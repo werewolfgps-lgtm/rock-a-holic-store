@@ -558,13 +558,13 @@ const total = subtotal + valorFrete;
                   Ver carrinho
                 </Link>
 
-                <button
-                  type="button"
-                  onClick={() => setAberto(false)}
-                  className="w-full px-5 py-3 text-xs font-bold uppercase tracking-[0.15em] text-neutral-300 transition hover:text-white"
-                >
-                  Continuar comprando
-                </button>
+                <Link
+  href="/#loja"
+  onClick={() => setAberto(false)}
+  className="block w-full px-5 py-3 text-center text-xs font-bold uppercase tracking-[0.15em] text-neutral-300 transition hover:text-white"
+>
+  Continuar comprando
+</Link>
               </div>
             </div>
           )}
