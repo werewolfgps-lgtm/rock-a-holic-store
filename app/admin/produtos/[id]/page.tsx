@@ -12,6 +12,7 @@ type Produto = {
   preco: number;
   descricao: string | null;
   imagem_url: string | null;
+  imagens: string[];
   modelagem: string | null;
   ativo: boolean;
   tamanhos: string[];
@@ -58,16 +59,17 @@ export default async function EditarProdutoPage({
 
   const resultado = await sql`
     SELECT
-    id,
-    nome,
-    slug,
-    preco,
-    descricao,
-    imagem_url,
-    modelagem,
-    ativo,
-    tamanhos
-    FROM produtos
+      id,
+      nome,
+      slug,
+      preco,
+      descricao,
+      imagem_url,
+      imagens,
+      modelagem,
+      ativo,
+      tamanhos
+      FROM produtos
     WHERE id = ${produtoId}
     LIMIT 1
   `;
@@ -75,7 +77,7 @@ export default async function EditarProdutoPage({
   if (resultado.length === 0) {
     notFound();
   }
-
+  
   const produto = resultado[0] as Produto;
 
   return (

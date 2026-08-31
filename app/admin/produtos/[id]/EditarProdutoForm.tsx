@@ -10,6 +10,7 @@ type Produto = {
   preco: number;
   descricao: string | null;
   imagem_url: string | null;
+  imagens: string[];
   ativo: boolean;
   tamanhos: string[];
   modelagem: string | null;
@@ -30,9 +31,7 @@ export default function EditarProdutoForm({
   const [descricao, setDescricao] = useState(
     produto.descricao || ""
   );
-  const [imagemUrl, setImagemUrl] = useState(
-    produto.imagem_url || ""
-  );
+  const [imagemUrl, setImagemUrl] = useState( produto.imagem_url || "");
   const [imagemArquivo, setImagemArquivo] =
     useState<File | null>(null);
     const [imagensArquivos, setImagensArquivos] =
@@ -41,6 +40,9 @@ export default function EditarProdutoForm({
    const [imagensPreview, setImagensPreview] =
                   useState<string[]>([]);
 
+   const [imagensExistentes, setImagensExistentes] =
+               useState<string[]>(produto.imagens || []);
+              
   const [ativo, setAtivo] = useState(produto.ativo);
   const [tamanhos, setTamanhos] = useState(
     produto.tamanhos || []
@@ -66,6 +68,7 @@ export default function EditarProdutoForm({
     if (!imagemArquivo) {
       return imagemUrl;
     }
+
 
     try {
       setEnviandoImagem(true);
@@ -96,6 +99,40 @@ export default function EditarProdutoForm({
     }
   }
 
+  async function enviarImagensAdicionais() {
+  if (imagensArquivos.length === 0) {
+    return [];
+  }
+
+  const urls: string[] = [];
+
+  for (const arquivo of imagensArquivos) {
+    const formData = new FormData();
+    formData.append("arquivo", arquivo);
+
+    const resposta = await fetch(
+      "/api/admin/produtos/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        resultado.erro ||
+          "Não foi possível enviar uma das imagens adicionais."
+      );
+    }
+
+    urls.push(resultado.url);
+  }
+
+  return urls;
+}
+
   async function salvar(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -106,6 +143,12 @@ export default function EditarProdutoForm({
       setErro("");
 
       const imagemFinal = await enviarImagem();
+      const novasImagens = await enviarImagensAdicionais();
+
+      const imagensFinais = [
+          ...imagensExistentes,
+          ...novasImagens,
+          ];
 
       const resposta = await fetch(
         `/api/admin/produtos/${produto.id}`,
@@ -115,17 +158,18 @@ export default function EditarProdutoForm({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            nome,
-            slug,
-            preco,
-            descricao,
-            imagemUrl: imagemFinal,
-            ativo,
-            tamanhos,
+          nome,
+          slug,
+          preco,
+          descricao,
+          imagemUrl: imagemFinal,
+          imagens: imagensFinais,
+           ativo,
+           tamanhos,
             modelagem,
-          }),
-        }
-      );
+           }),
+           }
+          );
 
       const resultado = await resposta.json();
 
@@ -261,6 +305,43 @@ export default function EditarProdutoForm({
   <p className="mt-2 text-xs text-neutral-500">
     Selecione outras fotos para a galeria do produto.
   </p>
+
+  {imagensExistentes.length > 0 && (
+  <div className="mt-4">
+    <p className="mb-3 text-xs font-black uppercase tracking-[0.15em] text-neutral-500">
+      Imagens atuais
+    </p>
+
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      {imagensExistentes.map((imagem, index) => (
+        <div
+          key={`${imagem}-${index}`}
+          className="relative border border-white/10 bg-black p-2"
+        >
+          <div className="aspect-square overflow-hidden">
+            <img
+              src={imagem}
+              alt={`Imagem atual ${index + 1}`}
+              className="h-full w-full object-contain"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setImagensExistentes((atuais) =>
+                atuais.filter((_, i) => i !== index)
+              )
+            }
+            className="mt-2 w-full border border-red-700 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-red-500 transition hover:bg-red-700 hover:text-white"
+          >
+            Remover
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
   <input
     type="file"

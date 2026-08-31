@@ -55,14 +55,16 @@ export async function PUT(
 
     // DADOS RECEBIDOS
     const {
-      nome,
-      slug,
-      preco,
-      descricao,
-      imagemUrl,
-      ativo,
-      tamanhos,
-    } = await request.json();
+        nome,
+        slug,
+        preco,
+        descricao,
+        imagemUrl,
+        imagens,
+        modelagem,
+        ativo,
+        tamanhos,
+        } = await request.json();
 
     if (!nome?.trim()) {
       return NextResponse.json(
@@ -144,26 +146,25 @@ export async function PUT(
         preco = ${precoNumero},
         descricao = ${descricao?.trim() || null},
         imagem_url = ${imagemUrl?.trim() || null},
+        imagens = ${Array.isArray(imagens) ? imagens : []},
+        modelagem = ${modelagem || null},
         ativo = ${Boolean(ativo)},
         tamanhos = ${tamanhos},
         updated_at = NOW()
       WHERE id = ${produtoId}
       RETURNING
         id,
-        nome,
-        slug,
+       nome,
+       slug,
         preco,
-        imagem_url,
-        ativo,
-        tamanhos,
-        updated_at
+       imagem_url,
+       imagens,
+       modelagem,
+      ativo,
+       tamanhos,
+       updated_at
     `;
-
-    return NextResponse.json({
-      sucesso: true,
-      produto: resultado[0],
-    });
-  } catch (error) {
+      } catch (error) {
     console.error(
       "Erro ao atualizar produto:",
       error
