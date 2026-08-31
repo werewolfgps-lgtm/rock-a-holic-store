@@ -1,38 +1,38 @@
 import Image from "next/image";
 import HeroCarousel from "@/components/HeroCarousel";
 import CartButton from "@/components/CartButton";
-export default function Home() {
-  const produtos = [
-  {
-    nome: "Charlie Brown Jr.",
-    categoria: "RocK Nacional",
-    preco: "R$ 69,90",
-    imagem: "/produtos/cbjr.png",
-    slug: "charlie-brown-jr",
-  },
-  {
-    nome: "Raimundos",
-    categoria: "Rock Nacional",
-    preco: "R$ 69,90",
-    imagem: "/produtos/raimundos.png",
-    slug: "raimundos",
+import { neon } from "@neondatabase/serverless";
 
-  },
-  {
-    nome: "Guns N' Roses",
-    categoria: "Rock Internacional",
-    preco: "R$ 69,90",
-    imagem: "/produtos/gnr.png",
-    slug: "guns-n-roses",
-  },
-  {
-    nome: "Kiss",
-    categoria: "Rock Internacional",
-    preco: "R$ 69,90",
-    imagem: "/produtos/kiss.png",
-    slug: "kiss",
-  },
-];
+type Produto = {
+  id: number;
+  nome: string;
+  categoria: string | null;
+  preco: number;
+  imagem_url: string | null;
+  slug: string;
+};
+
+export default async function Home() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL não configurada.");
+  }
+
+  const sql = neon(databaseUrl);
+
+  const produtos = (await sql`
+    SELECT
+      id,
+      nome,
+      categoria,
+      preco,
+      imagem_url,
+      slug
+    FROM produtos
+    WHERE ativo = TRUE
+    ORDER BY id DESC
+  `) as Produto[];
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -102,10 +102,10 @@ export default function Home() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {produtos.map((produto) => (
-            <article key={produto.nome} className="group">
+            <article key={produto.id} className="group">
               <div className="relative aspect-[4/5] overflow-hidden bg-[#f2f2f2] p-3">
   <Image
-    src={produto.imagem}
+    src={produto.imagem_url || "/logo/logo-principal.png"}
     alt={`Camiseta ${produto.nome}`}
     fill
     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -114,13 +114,16 @@ export default function Home() {
 </div>
 
               <p className="mt-5 text-xs font-bold uppercase tracking-widest text-red-500">
-                {produto.categoria}
+                {produto.categoria || "Rock-a-Holic"}
               </p>
 
               <h3 className="mt-2 text-xl font-bold">{produto.nome}</h3>
 
               <p className="mt-2 font-semibold text-neutral-400">
-  {produto.preco}
+  {Number(produto.preco).toLocaleString("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+})}
 </p>
 
 <a

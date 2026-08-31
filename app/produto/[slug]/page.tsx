@@ -2,6 +2,18 @@ import ProductDetails from "@/components/ProductDetails";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { neon } from "@neondatabase/serverless";
+
+type Produto = {
+  id: number;
+  nome: string;
+  categoria: string | null;
+  preco: number;
+  imagem_url: string | null;
+  slug: string;
+  descricao: string | null;
+  tamanhos: string[];
+};
 
 const produtos = [
   {
@@ -51,15 +63,45 @@ type ProductPageProps = {
 export default async function ProductPage({
   params,
 }: ProductPageProps) {
-  const { slug } = await params;
+const { slug } = await params;
 
-  const produto = produtos.find(
-    (item) => item.slug === slug
-  );
+const databaseUrl = process.env.DATABASE_URL;
 
-  if (!produto) {
-    notFound();
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL não configurada.");
+}
+
+const sql = neon(databaseUrl);
+
+const resultado = await sql`
+  SELECT
+    id,
+    nome,
+    categoria,
+    preco,
+    imagem_url,
+    slug,
+    descricao,
+    tamanhos
+  FROM produtos
+  WHERE slug = ${slug}
+    AND ativo = TRUE
+  LIMIT 1
+`;
+
+if (resultado.length === 0) {
+  notFound();
+}
+
+const produto = resultado[0] as Produto;
+
+const precoFormatado = Number(produto.preco).toLocaleString(
+  "pt-BR",
+  {
+    style: "currency",
+    currency: "BRL",
   }
+);
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -75,7 +117,7 @@ export default async function ProductPage({
           {/* IMAGEM */}
           <div className="relative aspect-square overflow-hidden bg-[#f2f2f2]">
             <Image
-              src={produto.imagem}
+              src={produto.imagem_url || "/logo/logo-principal.png"}
               alt={`Camiseta ${produto.nome}`}
               fill
               priority
@@ -103,11 +145,14 @@ export default async function ProductPage({
 
             {/* TAMANHOS */}
             <ProductDetails
-              nome={produto.nome}
-              preco={produto.preco}
-              imagem={produto.imagem}
-              slug={produto.slug}
-            />
+               nome={produto.nome}
+              preco={precoFormatado}
+             imagem={
+            produto.imagem_url ||
+             "/logo/logo-principal.png"
+              }
+             slug={produto.slug}
+             />
 
             {/* DETALHES */}
             <div className="mt-10 border-t border-white/10 pt-7">
