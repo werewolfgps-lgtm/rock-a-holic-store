@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import LogoutButton from "../LogoutButton";
+import AdminNav from "../AdminNav";
 
 type Produto = {
   id: number;
@@ -43,7 +44,7 @@ export default async function AdminProdutosPage() {
     return (
       <main className="min-h-screen bg-black p-8 text-white">
         Banco de dados não configurado.
-      </main>
+              </main>
     );
   }
 
@@ -66,6 +67,7 @@ export default async function AdminProdutosPage() {
 
   return (
     <main className="min-h-screen bg-black px-6 py-12 text-white">
+      <AdminNav />
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -83,13 +85,7 @@ export default async function AdminProdutosPage() {
           </div>
 
           <div className="flex gap-3">
-            <Link
-              href="/admin/pedidos"
-              className="border border-white/10 px-5 py-3 text-xs font-black uppercase tracking-[0.1em] text-neutral-300 transition hover:border-red-600 hover:text-white"
-            >
-              Pedidos
-            </Link>
-
+            
             <Link
               href="/admin/produtos/novo"
               className="bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-[0.1em] transition hover:bg-red-800"

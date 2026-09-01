@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import LogoutButton from "../LogoutButton";
+import AdminNav from "../AdminNav";
 
 type Pedido = {
   id: number;
@@ -66,7 +67,8 @@ if (!tokenSalvo || tokenSalvo !== tokenEsperado) {
     return (
       <main className="min-h-screen bg-black p-8 text-white">
         Banco de dados não configurado.
-      </main>
+        
+         </main>
     );
   }
 
@@ -146,6 +148,7 @@ const quantidadeStatus = contagens[0];
   return (
 
         <main className="min-h-screen bg-black px-6 py-12 text-white">
+          <AdminNav />
       <div className="mx-auto max-w-7xl">
         <p className="text-xs font-black uppercase tracking-[0.3em] text-red-600">
           Rock-a-Holic Store
